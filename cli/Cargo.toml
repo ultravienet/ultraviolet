@@ -1,0 +1,22 @@
+[package]
+name = "uv-cli"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Ultraviolet CLI wallet: issue / send / scan / balance."
+
+[[bin]]
+name = "uv"
+path = "src/main.rs"
+
+[dependencies]
+ultraviolet-kernel = { path = "../kernel", features = ["serde", "slh"] }
+uv-wallet = { path = "../wallet" }
+uv-prove = { path = "../prove" }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+bincode = "1.3"
+hex = "0.4"
+directories = "5"
+rand = "0.8"

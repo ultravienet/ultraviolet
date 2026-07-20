@@ -1,0 +1,10 @@
+[package]
+name = "uv-guest"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "SP1 guest program proving Ultraviolet fungible transfer transitions."
+
+[dependencies]
+sp1-zkvm = { version = "6.0.1", features = ["verify"] }
+ultraviolet-kernel = { path = "../kernel", default-features = false, features = ["serde"] }

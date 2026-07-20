@@ -1,0 +1,13 @@
+[package]
+name = "uv-prover"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Host driver: builds the Ultraviolet guest, proves a transfer, verifies the STARK."
+
+[dependencies]
+sp1-sdk = { version = "6.0.1", features = ["blocking"] }
+ultraviolet-kernel = { path = "../kernel", features = ["serde", "slh"] }
+
+[build-dependencies]
+sp1-build = "6.0.1"

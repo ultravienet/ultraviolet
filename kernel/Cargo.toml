@@ -1,0 +1,24 @@
+[package]
+name = "ultraviolet-kernel"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Consensus-critical types for the Ultraviolet protocol: notes, nullifiers, address records, finality receipts."
+repository = "https://github.com/ultravienet/ultraviolet"
+
+[dependencies]
+sha2 = "0.10"
+blake3 = { version = "1", optional = true }
+fips205 = { version = "0.4", optional = true }
+rand_core = { version = "0.6", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+default = ["slh"]
+# Performance hash profile: arithmetization-friendly hashing inside recursion.
+# Boundary hashes (commitments, nullifiers, records) are ALWAYS SHA-256.
+perf-hash = ["dep:blake3"]
+# SLH-DSA-SHA2-128s signatures (FIPS 205) via the `fips205` crate.
+slh = ["dep:fips205", "dep:rand_core"]
+# Serde derives on transfer types (used by the SP1 guest/prover I/O).
+serde = ["dep:serde"]

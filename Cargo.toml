@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = ["kernel", "guest", "prover", "wallet", "prove", "cli"]
+
+# SLH-DSA signing is hash-heavy; keep the crypto crate optimized even in dev
+# builds so tests stay fast.
+[profile.dev.package.fips205]
+opt-level = 3

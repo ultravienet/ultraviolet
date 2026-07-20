@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Darknoise — Why Ultraviolet Doesn't Need Lightning</title>
+<style>
+  :root {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+    --display: "Futura", "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif;
+    --body: "Charter", "Iowan Old Style", "Georgia", serif;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0714;
+      --surface: #140E22;
+      --surface2: #1C1430;
+      --ink: #E9E4F4;
+      --muted: #9C93B8;
+      --uv: #9D6BFF;
+      --uv-soft: rgba(157, 107, 255, 0.14);
+      --line: #2A2140;
+      --fiber-a: #60A5FA;
+      --fiber-b: #34D399;
+      --fiber-c: #FBBF24;
+      --fiber-opacity: 0.6;
+      --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B0714;
+    --surface: #140E22;
+    --surface2: #1C1430;
+    --ink: #E9E4F4;
+    --muted: #9C93B8;
+    --uv: #9D6BFF;
+    --uv-soft: rgba(157, 107, 255, 0.14);
+    --line: #2A2140;
+    --fiber-a: #60A5FA;
+    --fiber-b: #34D399;
+    --fiber-c: #FBBF24;
+    --fiber-opacity: 0.6;
+    --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+  main { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
+  section { margin-top: 4.5rem; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h2 { font-size: 1.7rem; margin-bottom: 1rem; }
+  h3 { font-size: 1.15rem; }
+  p { max-width: 46rem; }
+  a { color: var(--uv); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--uv); margin: 0 0 0.75rem;
+  }
+  .muted { color: var(--muted); }
+
+  /* ---- Hero ---- */
+  header {
+    position: relative; overflow: hidden;
+    padding: 5.5rem 1.5rem 3.5rem; text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .fibers { position: absolute; inset: 0; pointer-events: none; }
+  .fiber { position: absolute; width: 26px; height: 2px; border-radius: 2px; opacity: var(--fiber-opacity, 0.3); }
+  h1.wordmark {
+    font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 600; color: var(--uv); text-shadow: var(--glow);
+  }
+  .tagline { font-size: 1.2rem; font-style: italic; color: var(--muted); margin: 1rem auto 0; }
+  .sub { margin: 1.25rem auto 0; max-width: 44rem; }
+
+  /* ---- Spectrum strip ---- */
+  .spectrum { max-width: 56rem; margin: 3rem auto 0; }
+  .strip {
+    height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg,
+      #2a0a0a 0%, #7f1d1d 14%, #dc2626 30%, #ca8a04 41%,
+      #16a34a 50%, #0891b2 61%, #2563eb 70%, #7c3aed 82%,
+      var(--uv) 88%, var(--bg) 100%);
+  }
+  .strip-labels {
+    display: flex; font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.12em; color: var(--muted); margin-top: 0.5rem;
+  }
+  .strip-labels .visible { flex: 0 0 80%; display: flex; justify-content: space-around; }
+  .strip-labels .beyond { flex: 1; text-align: right; color: var(--uv); font-weight: 700; }
+  .you-are-here {
+    position: relative; height: 0; max-width: 56rem; margin: 0 auto;
+  }
+  .marker {
+    position: absolute; right: 4%; top: -26px; width: 4px; height: 24px;
+    background: var(--uv); border-radius: 2px; box-shadow: var(--glow);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .marker { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.45; } }
+  }
+
+  /* ---- Three properties ---- */
+  .props { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+  .prop {
+    background: var(--surface); border: 1px solid var(--line);
+    border-top: 3px solid var(--uv); padding: 1.5rem;
+  }
+  .prop h3 { margin-bottom: 0.6rem; }
+  .prop p { font-size: 0.97rem; margin: 0; }
+  .prop .num { font-family: var(--mono); color: var(--uv); font-size: 0.75rem; letter-spacing: 0.15em; display: block; margin-bottom: 0.9rem; }
+
+  /* ---- Architecture ---- */
+  .arch { display: grid; gap: 0.75rem; max-width: 46rem; }
+  .layer {
+    display: grid; grid-template-columns: 11rem 1fr; gap: 1rem;
+    background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem;
+    align-items: baseline;
+  }
+  .layer b { font-family: var(--display); font-size: 0.95rem; }
+  .layer span { font-size: 0.95rem; color: var(--muted); }
+  .layer.chain { border-left: 3px solid var(--uv); }
+  @media (max-width: 40rem) {
+    .layer { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+  .arrow { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-size: 0.85rem; background: var(--surface2); white-space: nowrap; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .yes { color: var(--uv); font-weight: 700; }
+  .no { color: var(--muted); }
+  td, th { font-variant-numeric: tabular-nums; }
+
+  /* ---- Callout ---- */
+  .callout {
+    background: var(--uv-soft); border: 1px solid var(--uv);
+    padding: 1.5rem 1.75rem; max-width: 48rem;
+  }
+  .callout p { margin: 0.4rem 0 0; }
+  .callout h3 { color: var(--uv); }
+
+  /* ---- Lists ---- */
+  ul.tight { max-width: 46rem; padding-left: 1.2rem; }
+  ul.tight li { margin-bottom: 0.55rem; }
+
+  footer {
+    margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<header style="padding: 3.5rem 1.5rem 2.5rem;">
+  <p class="eyebrow"><a href="index.html">← Ultraviolet</a> · Darknoise</p>
+  <h1 class="wordmark" style="font-size: clamp(1.8rem, 5vw, 3rem);">Darknoise</h1>
+  <p class="tagline">White Noise carries the words. Darknoise carries the money.</p>
+  <p class="sub">Why the default payment doesn't need Lightning — or liquidity, channels, or
+  anything else you have to manage.</p>
+</header>
+
+<main>
+
+<section>
+  <p class="eyebrow">The default payment</p>
+  <h2>Alice pays Bob $20 in a chat</h2>
+  <div class="arch">
+    <div class="layer">
+      <b>t + 0 s — send</b>
+      <span>her wallet selects notes, derives nullifiers, ML-KEM-encrypts the bundle to Bob's scan
+      key, ships it to the relay mailbox, submits the 64-byte record. All local.</span>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="layer">
+      <b>t + seconds — visible</b>
+      <span>Bob's chat shows the $20 bubble (Nostr is instant), and the record hits Bitcoin's
+      mempool, which his client watches — the practical assurance that ran a decade of 0-conf
+      retail. Asleep? It waits in his mailbox — receivers need zero liveness and zero setup: no
+      channel, no inbound liquidity, no UTXO, no bitcoin.</span>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="layer">
+      <b>t + minutes — proven</b>
+      <span>the STARK follows asynchronously (~1 min laptop CPU today; seconds delegated to a GPU
+      prover that never holds spend keys). Bob verifies it in milliseconds.</span>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="layer chain">
+      <b>t + ~1 block — trustless</b>
+      <span>the record lands in a Bitcoin checkpoint; Bob's assurance upgrades from "bonded relay"
+      to "proof-of-work," automatically.</span>
+    </div>
+  </div>
+  <p style="margin-top:1.25rem">The core move is <strong>splitting authorization from
+  settlement</strong> — the shape of every payment system people actually like. Cards authorize in
+  a second and settle in days; Darknoise authorizes in a heartbeat and settles in
+  minutes-to-a-block, while the conversation moves on.</p>
+</section>
+
+<section>
+  <p class="eyebrow">The deletion list</p>
+  <h2>What Lightning charges for the default case</h2>
+  <p>Lightning collapses authorization and settlement into one instant trustless event. Elegant —
+  and here is its bill, every line of which Darknoise deletes:</p>
+  <ul class="tight">
+    <li><strong>Inbound liquidity</strong> — acquired, rented, or begged before you can receive at all</li>
+    <li><strong>Channel opens</strong> — an on-chain transaction per user before the first payment</li>
+    <li><strong>Splicing and rebalancing</strong> — ongoing capital management as balances drift</li>
+    <li><strong>Force-close risk</strong> — funds hostage to counterparty cooperation and fee spikes</li>
+    <li><strong>Liveness or watchtowers</strong> — go offline wrong and lose money</li>
+    <li><strong>LSP mediation</strong> — in practice, a company managing all of the above for you</li>
+  </ul>
+  <p class="muted">Direct transfers aren't routed, so liquidity doesn't exist as a concept. The
+  honest line item on our side: between mempool and confirmation the assurance is <em>practical</em>,
+  not cryptographic — fine for $20 among humans; for $2M the wallet says "one block"; channels give
+  instant-trustless to regulars; and a fully-designed optional speed layer (bonded sub-second
+  receipts) stays shelved until stranger-retail demands it.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Four rails</p>
+  <h2>The full payment stack</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Rail</th><th>Finality</th><th>For</th></tr>
+    <tr><td>Darknoise direct</td><td>visible in seconds → ~1 block trustless</td><td><b>the default</b>: chat payments, commerce, anyone-to-anyone</td></tr>
+    <tr><td>PQ channel</td><td>instant &amp; bilateral; assumes liveness</td><td>ongoing relationships; machine-speed streaming — kernel-native eltoo, no adaptor signatures, weakest tier</td></tr>
+    <tr><td>Hash-locked gateway</td><td>atomic per swap</td><td>reach into Lightning's economy</td></tr>
+    <tr><td>Direct L1 record</td><td>~1 block, trustless</td><td>settlement-sized transfers</td></tr>
+  </table>
+  </div>
+  <p style="margin-top:1.25rem"><strong>Channels came back — but on our terms.</strong> Bitcoin
+  never got eltoo because its script can't say "highest co-signed state wins"; our kernel just says
+  it, in Rust. No penalty algebra, no toxic state, safe backups, pure hashes — and XOR-chained
+  per-hop preimages give the payment decorrelation PTLCs were invented for. Channels become an
+  optimization for relationships, not the network's fabric: nobody else ever notices they exist.</p>
+</section>
+
+<section>
+  <p class="eyebrow">The doorway</p>
+  <h2>Lightning as a neighbor</h2>
+  <p>Lightning HTLCs settle by revealing a SHA-256 preimage — pure hash cryptography, already our
+  primitive, already post-quantum. So a note spendable by preimage (refundable after timeout) makes
+  gateway swaps atomic: lock UV-USDT to a Lightning invoice's payment hash, the gateway pays the
+  invoice, and the settlement preimage <em>is</em> the gateway's claim key. If the gateway never
+  pays, the timeout refunds. Custody-free, competitive RFQ market, exposure bounded per swap —
+  classical crypto only on Lightning's side of the door, which is Lightning's rail, not ours.</p>
+  <div class="callout" style="margin-top:1.5rem">
+    <h3>The Lightning question's final form</h3>
+    <p>Operate no liquidity network, keep channels for friends, and keep one hash-shaped door open.</p>
+  </div>
+</section>
+
+<footer>
+  ULTRAVIOLET · DARKNOISE · July 2026 · full notes:
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/06-PAYMENTS.md">spec/06-PAYMENTS.md</a> ·
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/07-CHANNELS.md">spec/07-CHANNELS.md</a> ·
+  <a href="index.html">main page</a> · <a href="compare.html">the field</a>
+</footer>
+
+</main>
+
+</body>
+</html>

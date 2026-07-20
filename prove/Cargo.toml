@@ -1,0 +1,14 @@
+[package]
+name = "uv-prove"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "SP1 proving/verification orchestration for Ultraviolet transfers (drives the uv-guest program)."
+
+[dependencies]
+ultraviolet-kernel = { path = "../kernel", features = ["serde", "slh"] }
+sp1-sdk = { version = "6.0.1", features = ["blocking"] }
+bincode = "1.3"
+
+[build-dependencies]
+sp1-build = "6.0.1"

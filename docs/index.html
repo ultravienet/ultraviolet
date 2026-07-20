@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ultraviolet — Quantum-Safe Assets on Bitcoin</title>
+<style>
+  :root {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+    --display: "Futura", "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif;
+    --body: "Charter", "Iowan Old Style", "Georgia", serif;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0714;
+      --surface: #140E22;
+      --surface2: #1C1430;
+      --ink: #E9E4F4;
+      --muted: #9C93B8;
+      --uv: #9D6BFF;
+      --uv-soft: rgba(157, 107, 255, 0.14);
+      --line: #2A2140;
+      --fiber-a: #60A5FA;
+      --fiber-b: #34D399;
+      --fiber-c: #FBBF24;
+      --fiber-opacity: 0.6;
+      --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B0714;
+    --surface: #140E22;
+    --surface2: #1C1430;
+    --ink: #E9E4F4;
+    --muted: #9C93B8;
+    --uv: #9D6BFF;
+    --uv-soft: rgba(157, 107, 255, 0.14);
+    --line: #2A2140;
+    --fiber-a: #60A5FA;
+    --fiber-b: #34D399;
+    --fiber-c: #FBBF24;
+    --fiber-opacity: 0.6;
+    --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+  main { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
+  section { margin-top: 4.5rem; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h2 { font-size: 1.7rem; margin-bottom: 1rem; }
+  h3 { font-size: 1.15rem; }
+  p { max-width: 46rem; }
+  a { color: var(--uv); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--uv); margin: 0 0 0.75rem;
+  }
+  .muted { color: var(--muted); }
+
+  /* ---- Hero ---- */
+  header {
+    position: relative; overflow: hidden;
+    padding: 5.5rem 1.5rem 3.5rem; text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .fibers { position: absolute; inset: 0; pointer-events: none; }
+  .fiber { position: absolute; width: 26px; height: 2px; border-radius: 2px; opacity: var(--fiber-opacity, 0.3); }
+  h1.wordmark {
+    font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 600; color: var(--uv); text-shadow: var(--glow);
+  }
+  .tagline { font-size: 1.2rem; font-style: italic; color: var(--muted); margin: 1rem auto 0; }
+  .sub { margin: 1.25rem auto 0; max-width: 44rem; }
+
+  /* ---- Spectrum strip ---- */
+  .spectrum { max-width: 56rem; margin: 3rem auto 0; }
+  .strip {
+    height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg,
+      #2a0a0a 0%, #7f1d1d 14%, #dc2626 30%, #ca8a04 41%,
+      #16a34a 50%, #0891b2 61%, #2563eb 70%, #7c3aed 82%,
+      var(--uv) 88%, var(--bg) 100%);
+  }
+  .strip-labels {
+    display: flex; font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.12em; color: var(--muted); margin-top: 0.5rem;
+  }
+  .strip-labels .visible { flex: 0 0 80%; display: flex; justify-content: space-around; }
+  .strip-labels .beyond { flex: 1; text-align: right; color: var(--uv); font-weight: 700; }
+  .you-are-here {
+    position: relative; height: 0; max-width: 56rem; margin: 0 auto;
+  }
+  .marker {
+    position: absolute; right: 4%; top: -26px; width: 4px; height: 24px;
+    background: var(--uv); border-radius: 2px; box-shadow: var(--glow);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .marker { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.45; } }
+  }
+
+  /* ---- Three properties ---- */
+  .props { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+  .prop {
+    background: var(--surface); border: 1px solid var(--line);
+    border-top: 3px solid var(--uv); padding: 1.5rem;
+  }
+  .prop h3 { margin-bottom: 0.6rem; }
+  .prop p { font-size: 0.97rem; margin: 0; }
+  .prop .num { font-family: var(--mono); color: var(--uv); font-size: 0.75rem; letter-spacing: 0.15em; display: block; margin-bottom: 0.9rem; }
+
+  /* ---- Architecture ---- */
+  .arch { display: grid; gap: 0.75rem; max-width: 46rem; }
+  .layer {
+    display: grid; grid-template-columns: 11rem 1fr; gap: 1rem;
+    background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem;
+    align-items: baseline;
+  }
+  .layer b { font-family: var(--display); font-size: 0.95rem; }
+  .layer span { font-size: 0.95rem; color: var(--muted); }
+  .layer.chain { border-left: 3px solid var(--uv); }
+  @media (max-width: 40rem) {
+    .layer { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+  .arrow { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-size: 0.85rem; background: var(--surface2); white-space: nowrap; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .yes { color: var(--uv); font-weight: 700; }
+  .no { color: var(--muted); }
+  td, th { font-variant-numeric: tabular-nums; }
+
+  /* ---- Callout ---- */
+  .callout {
+    background: var(--uv-soft); border: 1px solid var(--uv);
+    padding: 1.5rem 1.75rem; max-width: 48rem;
+  }
+  .callout p { margin: 0.4rem 0 0; }
+  .callout h3 { color: var(--uv); }
+
+  /* ---- Lists ---- */
+  ul.tight { max-width: 46rem; padding-left: 1.2rem; }
+  ul.tight li { margin-bottom: 0.55rem; }
+
+  footer {
+    margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+  }
+
+  .sitenav {
+    margin-top: 2.25rem; font-family: var(--mono); font-size: 0.75rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .sitenav a { color: var(--uv); text-decoration: none; margin: 0 0.9rem; }
+  .sitenav a:hover { text-decoration: underline; }
+  .sitenav span { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="fibers" id="fibers" aria-hidden="true"></div>
+  <p class="eyebrow">Draft protocol design · July 2026</p>
+  <h1 class="wordmark">Ultraviolet</h1>
+  <p class="tagline">The spectrum beyond RGB. The light you verify banknotes under.</p>
+  <p class="sub"><strong>Money that works like texting</strong> — sent in chat, on Bitcoin within
+  the hour, immune to quantum computers. The only software anyone runs is a chat app, and
+  everything that could steal or forge money reduces to one assumption:
+  <strong>the hash function</strong>.</p>
+
+  <div class="spectrum">
+    <div class="strip"></div>
+    <div class="you-are-here"><div class="marker"></div></div>
+    <div class="strip-labels">
+      <div class="visible"><span>· · ·</span><span>R</span><span>G</span><span>B</span></div>
+      <div class="beyond">UV — YOU ARE HERE</div>
+    </div>
+  </div>
+
+  <nav class="sitenav">
+    <a href="compare.html">The Field</a><span>·</span><a href="darknoise.html">Darknoise</a><span>·</span><a href="https://github.com/ultravienet/ultraviolet">GitHub</a>
+  </nav>
+</header>
+
+<main>
+
+<section>
+  <p class="eyebrow">The thesis</p>
+  <h2>Off-chain, size stops mattering</h2>
+  <p>Client-side validation keeps signatures and proofs out of Bitcoin blocks — so the block-space
+  economics that make Bitcoin's own post-quantum migration slow and contentious simply don't apply.
+  A 7.9&thinsp;KB hash-based signature is unpayable on-chain and a rounding error off-chain.
+  Ultraviolet spends that freedom on the most conservative cryptography that exists: hash-based
+  signatures, hash-based recursive STARKs, hash commitments, hash-derived nullifiers. The chain
+  contributes the one thing a quantum computer cannot forge anyway — proof-of-work ordering.</p>
+  <p class="muted">Neither RGB v0.12 (Schnorr-bound ownership) nor Blockstream's Shielded CSV
+  (Schnorr nullifiers) makes this claim. Ultraviolet is the synthesis: Shielded CSV's architecture,
+  RGB's contract generality, a hash-only assumption base.</p>
+</section>
+
+<section>
+  <p class="eyebrow">The whole system is three nouns</p>
+  <div class="props">
+    <div class="prop">
+      <span class="num">1 · NOTES</span>
+      <h3>The money</h3>
+      <p>A note is a private hash commitment to (asset, amount, owner, randomness), living only on
+      its owner's devices. Owners are post-quantum hash-based keys. Nobody else ever sees a note —
+      not relays, not the chain, not even the sender after it's spent.</p>
+    </div>
+    <div class="prop">
+      <span class="num">2 · RECORDS</span>
+      <h3>The double-spend lock</h3>
+      <p>Spending publishes a keyless 64-byte record on Bitcoin; first occurrence wins. That is the
+      chain's entire job — no UTXO owned, no script run, zero UTXO-set growth, no soft fork.
+      Receive with an empty Bitcoin wallet.</p>
+    </div>
+    <div class="prop">
+      <span class="num">3 · PROOFS</span>
+      <h3>The validity</h3>
+      <p>Every transfer carries one recursive STARK proving its entire history — constant size at
+      any depth (1,242 KB, measured). An asset that moved two million times verifies as fast as one
+      that moved twice. Hashes only; no trusted setup.</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:1.25rem">Everything else is these three composed over
+  <strong>today's Nostr network, unmodified — zero new server software</strong>. Payments are
+  visible in seconds (the record hits Bitcoin's mempool) and final in about a block; channels are
+  co-signed note-splits for instant-trustless with regulars; the client is a chat app that moves
+  notes. A fully-designed optional speed layer (bonded sub-second receipts) stays shelved until a
+  market demands it.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Architecture</p>
+  <h2>One transfer, three layers</h2>
+  <div class="arch">
+    <div class="layer">
+      <b>Sender wallet</b>
+      <span>spends a note with a hash-based signature; extends the recursive STARK; encrypts the new
+      note to the receiver's ML-KEM scan key (non-interactive — no invoice, no liveness)</span>
+    </div>
+    <div class="arrow">▼ proof bundle (~60–320 KB, encrypted)</div>
+    <div class="layer">
+      <b>Nostr + Blossom</b>
+      <span>events on ordinary Nostr relays; proof bundles on Blossom blob servers. Replicated,
+      permissionless, existing. Seed + relays = full wallet recovery. Confidentiality never depends
+      on the store.</span>
+    </div>
+    <div class="arrow">▼ 64 bytes: nf ‖ H(transfer bundle)</div>
+    <div class="layer chain">
+      <b>Bitcoin</b>
+      <span>orders keyless nullifier records in OP_RETURN. First occurrence of a note's nullifier
+      wins — double-spend and equivocation prevention with nothing on-chain for a quantum computer
+      to attack.</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Read the spec</p>
+  <h2>Twelve files, numbered by dependency</h2>
+  <p>Each spec file has one job, states it in one sentence, and only references lower numbers — so
+  understanding never requires reading ahead, and the project can grow without getting more
+  confusing. Start at 00; stop whenever you have enough.</p>
+  <div class="tablewrap" style="margin-top:1rem">
+  <table>
+    <tr><th>#</th><th>File</th><th>One job</th></tr>
+    <tr><td>00</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/00-OVERVIEW.md">Overview</a></td><td>the three nouns, one diagram, every locked decision</td></tr>
+    <tr><td>01</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/01-CRYPTO.md">Crypto</a></td><td>hashes on the money path; everything else labeled</td></tr>
+    <tr><td>02</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/02-NOTES.md">Notes</a></td><td>the money, its owners, addresses, recovery</td></tr>
+    <tr><td>03</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/03-RECORDS.md">Records</a></td><td>64 bytes on Bitcoin; first occurrence wins; epochs</td></tr>
+    <tr><td>04</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/04-PROOFS.md">Proofs</a></td><td>recursion; O(1) receive, measured</td></tr>
+    <tr><td>05</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/05-NETWORK.md">Network</a></td><td>ordinary Nostr, unmodified; zero new server software</td></tr>
+    <tr><td>06</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/06-PAYMENTS.md">Payments</a></td><td>Darknoise: the default payment; hash-locks; four rails</td></tr>
+    <tr><td>07</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/07-CHANNELS.md">Channels</a></td><td>kernel-native eltoo; no adaptor signatures; the weaker liveness-assuming tier</td></tr>
+    <tr><td>08</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/08-CLIENT.md">Client</a></td><td>Blacklight: the chat app (White Noise fork)</td></tr>
+    <tr><td>09</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/09-INTEROP.md">Interop</a></td><td>never upgrade old rails; M-Day; the Lightning door</td></tr>
+    <tr><td>10</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/10-COMPARISONS.md">Comparisons</a></td><td>RGB, Taproot Assets, Shielded CSV, SuperScalar</td></tr>
+    <tr><td>11</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/11-SPEED-LAYER.md">Speed layer</a></td><td><em>optional</em>: bonded sub-second receipts — shelved until demanded</td></tr>
+    <tr><td>99</td><td><a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/99-OPEN-PROBLEMS.md">Open problems</a></td><td>the only list of what's unfinished</td></tr>
+  </table>
+  </div>
+  <p class="muted" style="margin-top:0.75rem">Plus the
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/GLOSSARY.md">glossary</a> — one term
+  per concept, no synonyms.</p>
+</section>
+
+<section>
+  <p class="eyebrow">The client</p>
+  <h2>Payments are messages: Blacklight</h2>
+  <p>The client is a chat app. <strong>Blacklight</strong> forks
+  <a href="https://www.whitenoise.chat/">White Noise</a> — the audited, Rust-core Nostr messenger
+  (MLS groups via the Marmot protocol) — and makes "send $20" a message bubble in an existing
+  conversation. Your npub stays your social identity; money answers only to SLH-DSA-signed address
+  records that ride Nostr as events. The relays are today's ordinary Nostr relays doing what they
+  already do — storage and mailbox delivery — carrying event kinds they don't need to understand.
+  Records go to Bitcoin from the client itself: self-published, receiver-published, or
+  cooperatively batched.</p>
+  <p class="muted">Payments have two states: <em>visible</em> (the record in Bitcoin's mempool,
+  seconds) and <em>final</em> (confirmed, about a block) — wallets pick their comfort by amount,
+  and channels give instant-trustless to regulars. Events to the relay, KEM to the human, MLS if
+  you keep talking, Bitcoin for finality. The full no-Lightning story — and why channels came back
+  kernel-native anyway — is <a href="darknoise.html">Darknoise</a>.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Beyond post-quantum</p>
+  <h2>Seven upgrades over shipped RGB</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Ultraviolet</th><th>RGB today (v0.11.1 mainnet / v0.12)</th></tr>
+    <tr><td>O(1) receive via recursion</td><td>Full history replay; v0.12 compression unshipped</td></tr>
+    <tr><td>Contracts in plain Rust (RISC-V zkVM)</td><td>Bespoke zk-AluVM + Contractum stack</td></tr>
+    <tr><td>Amounts &amp; history hidden, even from receiver</td><td>v0.12 removed confidential amounts; CSV shows history to every holder</td></tr>
+    <tr><td>64-byte keyless nullifier, batchable</td><td>Tapret/opret anchors; per-transfer UTXO management</td></tr>
+    <tr><td>Non-interactive send (KEM scan keys)</td><td>Invoice ceremony; receiver must come online</td></tr>
+    <tr><td>Named DA layer; seed = full recovery</td><td>Lose your stash, lose your funds</td></tr>
+    <tr><td>Hash-based ownership, validation, hybrid ML-KEM encryption</td><td>secp256k1 Schnorr throughout</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <div class="callout">
+    <h3>The UTXO set, untouched</h3>
+    <p>OP_RETURN outputs never enter the UTXO set — millions of Ultraviolet transfers add
+    <strong>zero</strong> entries to the state every full node carries. ~64 weight units per
+    transfer versus ~560 for an average transaction: roughly 10× the settlement density,
+    before batching. And because ownership never binds to an output, a quantum thief who steals
+    the anchoring UTXO steals nothing.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Comparison</p>
+  <h2>Per-layer, against the field</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>RGB v0.12</th><th>Shielded CSV</th><th>Ultraviolet</th></tr>
+    <tr><td>Ownership</td><td class="no">UTXO → Schnorr</td><td class="no">Schnorr</td><td class="yes">SLH-DSA / WOTS+ (hash)</td></tr>
+    <tr><td>Receive cost</td><td class="no">O(history)</td><td class="yes">O(1)</td><td class="yes">O(1)</td></tr>
+    <tr><td>UTXO to receive?</td><td class="no">Required</td><td class="yes">No</td><td class="yes">No</td></tr>
+    <tr><td>Amounts hidden</td><td class="no">No (removed in v0.12)</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+    <tr><td>Contract model</td><td class="yes">General</td><td class="no">Payments-focused</td><td class="yes">General (Rust)</td></tr>
+    <tr><td>PQ ownership</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓ hash-only</td></tr>
+    <tr><td>PQ encryption</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓ ML-KEM hybrid</td></tr>
+    <tr><td>Trusted setup</td><td class="yes">None</td><td class="yes">None</td><td class="yes">None</td></tr>
+  </table>
+  </div>
+  <p style="margin-top:1rem"><a href="taproot.html">Deep
+  dive: Ultraviolet vs Taproot Assets →</a> <span class="muted">— the strongest shipped competitor
+  (USDT live on Lightning), compared on ownership, validation, speed, and the quantum-duration
+  argument for real-world assets. The full field survey is <a href="compare.html">The Field</a>.</span></p>
+</section>
+
+<section>
+  <p class="eyebrow">Saying it precisely</p>
+  <h2>“Quantum-safe,” earned</h2>
+  <ul class="tight">
+    <li><strong>Theft &amp; forgery:</strong> quantum-safe under hash assumptions alone — the
+    conservative extreme of the PQ spectrum, NIST's own fallback if lattices fall.</li>
+    <li><strong>Confidentiality:</strong> quantum-safe under NIST lattice assumptions (hybrid
+    ML-KEM-768 + X25519 — no practical hash-based KEM exists). A lattice break would erode privacy,
+    never funds. The hybrid defends against harvest-now-decrypt-later today.</li>
+    <li><strong>Ordering:</strong> depends on Bitcoin's economic health through its own migration
+    (BIP-360/361) — systemic, not cryptographic. Never say “quantum-proof.”</li>
+  </ul>
+</section>
+
+<section>
+  <p class="eyebrow">Case study</p>
+  <h2>UTEXO &amp; native USDT: the requirements document</h2>
+  <p>Tether's UTEXO venture is shipping native USDT on Bitcoin over RGB v0.11.1 + Lightning right
+  now — proof the market wants CSV assets, and a preview of what breaks at scale. A high-velocity
+  stablecoin accrues history fastest exactly where adoption succeeds most: on RGB every receive
+  replays it; on Ultraviolet receive stays O(1). And the USDT mint key — the single most valuable
+  quantum target in the ecosystem — is a classical key on RGB. Here it is SLH-DSA from day one:
+  <em>your mint key is hash-based, today.</em></p>
+  <p class="muted">Where the incumbent leads, honestly: UTEXO's Lightning channels deliver instant
+  settlement now; post-quantum channel constructions (PQ adaptor signatures) are open research.
+  Coexistence, then convergence.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Honest accounting</p>
+  <h2>Open problems</h2>
+  <ul class="tight">
+    <li><strong>Two review gates before anything holds value:</strong> an external security audit,
+    and adversarial review of the channel dispute rules.</li>
+    <li>Proving is ~1 minute per hop on a laptop CPU; proofs are 1,242 KB against a 50–300 KB
+    target — GPU/delegated proving and FRI tightening are engineering, not research.</li>
+    <li>Spend authorization is host-side in v0; SLH-DSA verification moves in-circuit next.</li>
+    <li>No trustless bridge for BTC itself — v1 scope is issued assets, where issuance is native.</li>
+  </ul>
+  <p class="muted" style="margin-top:0.75rem">The complete, authoritative list is
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/99-OPEN-PROBLEMS.md">spec/99</a> —
+  if it isn't there, it isn't open.</p>
+</section>
+
+<footer>
+  ULTRAVIOLET · draft v0.1 · July 2026 · full design:
+  <a href="https://github.com/ultravienet/ultraviolet/tree/main/spec">the spec</a> (00–10 + 99,
+  numbered by dependency) · client: Blacklight (White Noise fork) · reference impl: SLH-DSA spends
+  + two-hop recursive STARKs working —
+  one 1.2 MB proof verifies any history depth (O(1) receive, measured 2026-07-22) · no security
+  review · sources: RGB v0.12 release, Shielded CSV (eprint 2025/068), BIP-360/361,
+  NIST FIPS 203–206, White Noise / Marmot, SuperScalar report
+</footer>
+
+</main>
+
+<script>
+  (function () {
+    var host = document.getElementById('fibers');
+    if (!host) return;
+    var colors = ['var(--fiber-a)', 'var(--fiber-b)', 'var(--fiber-c)', 'var(--uv)'];
+    for (var i = 0; i < 26; i++) {
+      var f = document.createElement('span');
+      f.className = 'fiber';
+      f.style.left = (Math.random() * 96) + '%';
+      f.style.top = (Math.random() * 92) + '%';
+      f.style.background = colors[i % colors.length];
+      f.style.transform = 'rotate(' + (Math.random() * 180 - 90) + 'deg)';
+      host.appendChild(f);
+    }
+  })();
+</script>
+
+</body>
+</html>

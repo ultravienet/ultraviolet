@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ultraviolet vs Taproot Assets</title>
+<style>
+  :root {
+    --bg: #F6F4FA; --surface: #FFFFFF; --surface2: #EFEBF8; --ink: #1A1430;
+    --muted: #5D5478; --uv: #6D3AE8; --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE; --glow: none;
+    --display: "Futura", "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif;
+    --body: "Charter", "Iowan Old Style", "Georgia", serif;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0714; --surface: #140E22; --surface2: #1C1430; --ink: #E9E4F4;
+      --muted: #9C93B8; --uv: #9D6BFF; --uv-soft: rgba(157, 107, 255, 0.14);
+      --line: #2A2140; --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F4FA; --surface: #FFFFFF; --surface2: #EFEBF8; --ink: #1A1430;
+    --muted: #5D5478; --uv: #6D3AE8; --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE; --glow: none;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B0714; --surface: #140E22; --surface2: #1C1430; --ink: #E9E4F4;
+    --muted: #9C93B8; --uv: #9D6BFF; --uv-soft: rgba(157, 107, 255, 0.14);
+    --line: #2A2140; --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--body); font-size: 1.06rem; line-height: 1.65;
+  }
+  main { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
+  section { margin-top: 3.5rem; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(1.9rem, 5vw, 3rem); }
+  h2 { font-size: 1.55rem; margin-bottom: 1rem; }
+  p { max-width: 46rem; }
+  a { color: var(--uv); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--uv); margin: 0 0 0.75rem;
+  }
+  .muted { color: var(--muted); }
+
+  header {
+    padding: 3.5rem 1.5rem 2.5rem; border-bottom: 1px solid var(--line);
+    max-width: 72rem; margin: 0 auto;
+  }
+  .home {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.14em;
+    text-transform: uppercase; text-decoration: none; color: var(--uv);
+    text-shadow: var(--glow);
+  }
+  .sub { margin-top: 1rem; max-width: 48rem; }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-size: 0.85rem; background: var(--surface2); white-space: nowrap; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .yes { color: var(--uv); font-weight: 700; }
+  .no { color: var(--muted); }
+
+  .callout {
+    background: var(--uv-soft); border: 1px solid var(--uv);
+    padding: 1.5rem 1.75rem; max-width: 48rem;
+  }
+  .callout p { margin: 0.4rem 0 0; }
+  .callout h3 { color: var(--uv); }
+
+  footer {
+    margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="home" href="https://ultravienet.github.io/ultraviolet/">← Ultraviolet</a>
+  <p class="eyebrow" style="margin-top:2rem">Comparison · July 2026</p>
+  <h1>Ultraviolet vs Taproot Assets</h1>
+  <p class="sub">Cousins, not strangers: both are client-side validated asset protocols on Bitcoin.
+  Taproot Assets (Lightning Labs, v0.8.0) is the most <em>shipped</em> competitor Ultraviolet has —
+  USDT has been live on Lightning through it since March 2026. The divergence comes down to three
+  architectural commitments.</p>
+</header>
+
+<main>
+
+<section>
+  <p class="eyebrow">Commitment one</p>
+  <h2>What owns the asset</h2>
+  <p>A Taproot Asset lives <em>inside</em> a taproot output: ownership is control of that UTXO —
+  secp256k1 Schnorr. The elegance is real: asset commitments hide invisibly in ordinary-looking
+  taproot spends, so on-chain uniformity is genuinely good privacy. The costs are structural: a
+  UTXO per holder, an on-chain spend per on-chain transfer, and <strong>total quantum
+  exposure</strong> — every asset is stealable by a quantum computer that breaks its anchor key,
+  with no post-quantum story on the roadmap.</p>
+  <p>Ultraviolet decouples ownership from UTXOs entirely: hash-based keys (SLH-DSA) in client-side
+  data, keyless ~64-byte records in OP_RETURN, receive with an empty Bitcoin wallet, zero UTXO-set
+  growth. Quantum-stealing an anchoring UTXO yields nothing, because nothing is bound to it.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Commitment two</p>
+  <h2>How history is validated — and who sees it</h2>
+  <p>Taproot Assets provenance proofs grow <strong>O(lineage)</strong>: every recipient
+  re-validates the asset's chain of custody, and proof files fatten with each hop — heaviest
+  exactly where adoption succeeds (the stablecoin case). There is no recursion, no compression,
+  and no zero-knowledge layer: off-chain proofs reveal history and amounts to each recipient.</p>
+  <p>Ultraviolet made recursion the core primitive, and it is now measured, not claimed:
+  <strong>one 1.2&thinsp;MB proof, constant across history depth</strong> (two-hop recursive STARK,
+  July 2026), with amounts and history hidden even from the receiver.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Commitment three</p>
+  <h2>How it goes fast</h2>
+  <p>Taproot Assets' decisive present-tense advantage: multi-asset Lightning channels are
+  <strong>shipped</strong> — RFQ edge liquidity, static reusable addresses, multi-path payments,
+  real USDT flowing today. Ultraviolet's default payment is visible in seconds (the record in
+  Bitcoin's mempool) and final in about a block, with kernel-native post-quantum eltoo channels —
+  no adaptor signatures — for instant-trustless between regulars, and an optional bonded-receipt
+  speed layer shelved until stranger-retail demands it. If the requirement is trustless instant
+  settlement to strangers in production this quarter, Taproot Assets wins, at the price of
+  everything above.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Side by side</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>Taproot Assets v0.8</th><th>Ultraviolet</th></tr>
+    <tr><td>Validation model</td><td class="yes">Client-side</td><td class="yes">Client-side</td></tr>
+    <tr><td>Ownership</td><td class="no">Taproot UTXO → Schnorr</td><td class="yes">SLH-DSA / WOTS+ (hash)</td></tr>
+    <tr><td>UTXO per holder</td><td class="no">Yes</td><td class="yes">No — receive with empty wallet</td></tr>
+    <tr><td>Receive cost</td><td class="no">O(lineage), growing proofs</td><td class="yes">O(1) — constant-size proof, measured</td></tr>
+    <tr><td>History &amp; amounts private</td><td class="no">Revealed to each recipient</td><td class="yes">Hidden even from receiver</td></tr>
+    <tr><td>On-chain uniformity</td><td class="yes">Excellent (hidden in taproot)</td><td class="yes">Opaque 64 B records</td></tr>
+    <tr><td>Instant settlement</td><td class="yes">Lightning, shipped (USDT live)</td><td class="no">PQ eltoo channels (designed); mempool-fast default</td></tr>
+    <tr><td>Post-quantum</td><td class="no">✗</td><td class="yes">✓ hash-based ownership &amp; validation</td></tr>
+    <tr><td>Production status</td><td class="yes">Mainnet, USDT on Lightning</td><td class="no">Working prototype (kernel + recursive prover)</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Two observations</p>
+  <h2>Both rails, and the duration argument</h2>
+  <p><strong>Tether is on both rails.</strong> USDT launched on Lightning via Taproot Assets in
+  March 2026 <em>and</em> on RGB via UTEXO in July 2026. An issuer hedging across asset rails
+  proves rail-switching is a live strategy — which is precisely the mechanism Ultraviolet's
+  migration plan depends on.</p>
+  <p><strong>Long-dated assets sharpen the quantum case.</strong> Tokenized treasuries and bonds
+  are duration instruments: a 10-year note issued on classical rails in 2026 must remain
+  unforgeable into the mid-2030s — exactly the window every quantum-capability estimate fights
+  over. Payments can migrate when the threat lands; issued long-dated assets have to outlive it.</p>
+</section>
+
+<section>
+  <div class="callout">
+    <h3>The verdict</h3>
+    <p>Taproot Assets is what excellent engineering achieves <em>within</em> the classical
+    UTXO-bound model. Ultraviolet is what becomes possible by leaving it.</p>
+  </div>
+</section>
+
+<footer>
+  ULTRAVIOLET · comparison note · July 2026 · full analysis: spec/10-COMPARISONS.md ·
+  sources: docs.lightning.engineering (Taproot Assets), spark.money research,
+  Taproot Assets v0.6–v0.8 release notes, UTEXO/USDT coverage
+</footer>
+
+</main>
+
+</body>
+</html>

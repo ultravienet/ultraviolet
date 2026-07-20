@@ -1,0 +1,27 @@
+[package]
+name = "uv-wallet"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Ultraviolet wallet core: keys, notes, addresses, the ML-KEM bundle envelope, and the Chain/Transport abstractions with in-process mocks."
+
+[dependencies]
+ultraviolet-kernel = { path = "../kernel", features = ["serde", "slh"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+bincode = "1.3"
+sha2 = "0.10"
+rand = "0.8"
+rand_chacha = "0.3"
+# Hybrid note encryption (off the money path): ML-KEM-768 + X25519 → HKDF → AEAD.
+ml-kem = "0.2"
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+hkdf = "0.12"
+chacha20poly1305 = "0.10"
+hex = "0.4"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.dev.package.fips205]
+opt-level = 3

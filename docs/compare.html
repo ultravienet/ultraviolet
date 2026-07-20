@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Field — Ultraviolet vs Taproot Assets, RGB, Shielded CSV, SuperScalar</title>
+<style>
+  :root {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+    --display: "Futura", "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif;
+    --body: "Charter", "Iowan Old Style", "Georgia", serif;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0714;
+      --surface: #140E22;
+      --surface2: #1C1430;
+      --ink: #E9E4F4;
+      --muted: #9C93B8;
+      --uv: #9D6BFF;
+      --uv-soft: rgba(157, 107, 255, 0.14);
+      --line: #2A2140;
+      --fiber-a: #60A5FA;
+      --fiber-b: #34D399;
+      --fiber-c: #FBBF24;
+      --fiber-opacity: 0.6;
+      --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B0714;
+    --surface: #140E22;
+    --surface2: #1C1430;
+    --ink: #E9E4F4;
+    --muted: #9C93B8;
+    --uv: #9D6BFF;
+    --uv-soft: rgba(157, 107, 255, 0.14);
+    --line: #2A2140;
+    --fiber-a: #60A5FA;
+    --fiber-b: #34D399;
+    --fiber-c: #FBBF24;
+    --fiber-opacity: 0.6;
+    --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+  main { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
+  section { margin-top: 4.5rem; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h2 { font-size: 1.7rem; margin-bottom: 1rem; }
+  h3 { font-size: 1.15rem; }
+  p { max-width: 46rem; }
+  a { color: var(--uv); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--uv); margin: 0 0 0.75rem;
+  }
+  .muted { color: var(--muted); }
+
+  /* ---- Hero ---- */
+  header {
+    position: relative; overflow: hidden;
+    padding: 5.5rem 1.5rem 3.5rem; text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .fibers { position: absolute; inset: 0; pointer-events: none; }
+  .fiber { position: absolute; width: 26px; height: 2px; border-radius: 2px; opacity: var(--fiber-opacity, 0.3); }
+  h1.wordmark {
+    font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 600; color: var(--uv); text-shadow: var(--glow);
+  }
+  .tagline { font-size: 1.2rem; font-style: italic; color: var(--muted); margin: 1rem auto 0; }
+  .sub { margin: 1.25rem auto 0; max-width: 44rem; }
+
+  /* ---- Spectrum strip ---- */
+  .spectrum { max-width: 56rem; margin: 3rem auto 0; }
+  .strip {
+    height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg,
+      #2a0a0a 0%, #7f1d1d 14%, #dc2626 30%, #ca8a04 41%,
+      #16a34a 50%, #0891b2 61%, #2563eb 70%, #7c3aed 82%,
+      var(--uv) 88%, var(--bg) 100%);
+  }
+  .strip-labels {
+    display: flex; font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.12em; color: var(--muted); margin-top: 0.5rem;
+  }
+  .strip-labels .visible { flex: 0 0 80%; display: flex; justify-content: space-around; }
+  .strip-labels .beyond { flex: 1; text-align: right; color: var(--uv); font-weight: 700; }
+  .you-are-here {
+    position: relative; height: 0; max-width: 56rem; margin: 0 auto;
+  }
+  .marker {
+    position: absolute; right: 4%; top: -26px; width: 4px; height: 24px;
+    background: var(--uv); border-radius: 2px; box-shadow: var(--glow);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .marker { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.45; } }
+  }
+
+  /* ---- Three properties ---- */
+  .props { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+  .prop {
+    background: var(--surface); border: 1px solid var(--line);
+    border-top: 3px solid var(--uv); padding: 1.5rem;
+  }
+  .prop h3 { margin-bottom: 0.6rem; }
+  .prop p { font-size: 0.97rem; margin: 0; }
+  .prop .num { font-family: var(--mono); color: var(--uv); font-size: 0.75rem; letter-spacing: 0.15em; display: block; margin-bottom: 0.9rem; }
+
+  /* ---- Architecture ---- */
+  .arch { display: grid; gap: 0.75rem; max-width: 46rem; }
+  .layer {
+    display: grid; grid-template-columns: 11rem 1fr; gap: 1rem;
+    background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem;
+    align-items: baseline;
+  }
+  .layer b { font-family: var(--display); font-size: 0.95rem; }
+  .layer span { font-size: 0.95rem; color: var(--muted); }
+  .layer.chain { border-left: 3px solid var(--uv); }
+  @media (max-width: 40rem) {
+    .layer { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+  .arrow { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-size: 0.85rem; background: var(--surface2); white-space: nowrap; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .yes { color: var(--uv); font-weight: 700; }
+  .no { color: var(--muted); }
+  td, th { font-variant-numeric: tabular-nums; }
+
+  /* ---- Callout ---- */
+  .callout {
+    background: var(--uv-soft); border: 1px solid var(--uv);
+    padding: 1.5rem 1.75rem; max-width: 48rem;
+  }
+  .callout p { margin: 0.4rem 0 0; }
+  .callout h3 { color: var(--uv); }
+
+  /* ---- Lists ---- */
+  ul.tight { max-width: 46rem; padding-left: 1.2rem; }
+  ul.tight li { margin-bottom: 0.55rem; }
+
+  footer {
+    margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<header style="padding: 3.5rem 1.5rem 2.5rem;">
+  <p class="eyebrow"><a href="index.html">← Ultraviolet</a> · The field</p>
+  <h1 class="wordmark" style="font-size: clamp(1.8rem, 5vw, 3rem);">The Field</h1>
+  <p class="tagline">How Ultraviolet compares to everything else putting assets on Bitcoin.</p>
+</header>
+
+<main>
+
+<section>
+  <p class="eyebrow">The strongest incumbent</p>
+  <h2>Taproot Assets</h2>
+  <p>Lightning Labs' protocol is the most <em>shipped</em> competitor: v0.8.0, with <strong>USDT live
+  on Lightning since March 2026</strong>, static reusable addresses, multi-path payments, and RFQ
+  edge liquidity. It is also a cousin — client-side validated, asset data off-chain, Bitcoin as the
+  anchor. The divergence is three architectural commitments:</p>
+  <div class="props" style="margin-top:1.5rem">
+    <div class="prop">
+      <span class="num">OWNERSHIP</span>
+      <h3>The UTXO is the asset</h3>
+      <p>A Taproot Asset lives inside a taproot output — ownership is secp256k1 Schnorr. Elegant
+      (commitments hide in ordinary-looking spends) but: a UTXO per holder, an on-chain spend per
+      transfer, and total quantum exposure with no PQ roadmap. Ultraviolet: hash-based keys in
+      client-side data, keyless 64-byte records, receive with an empty wallet — a quantum thief who
+      steals the anchor UTXO steals nothing.</p>
+    </div>
+    <div class="prop">
+      <span class="num">VALIDATION</span>
+      <h3>Proofs grow forever</h3>
+      <p>Provenance proofs grow O(lineage) — every recipient revalidates the custody chain, and
+      proofs fatten each hop, heaviest exactly where adoption succeeds. They also reveal history and
+      amounts to every recipient; no ZK layer exists or is planned. Ultraviolet: one 1,242&thinsp;KB
+      recursive STARK, constant across depth — measured — with amounts and history hidden.</p>
+    </div>
+    <div class="prop">
+      <span class="num">SPEED</span>
+      <h3>Channels, shipped</h3>
+      <p>TA's decisive present-tense advantage: multi-asset Lightning channels in production. If you
+      need trustless instant settlement this quarter, TA wins — at the price of the other two
+      columns. Ultraviolet answers with mempool-visible-in-seconds payments, kernel-native eltoo channels
+      for relationships, and hash-locked gateway swaps into Lightning itself.</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:1.25rem">The RWA angle sharpens the quantum argument: tokenized
+  treasuries and bonds are <em>long-duration</em> instruments. A 10-year note issued on classical
+  rails in 2026 must remain unforgeable into the mid-2030s — the exact window CRQC estimates fight
+  over. Payments can migrate when the threat lands; issued long-dated assets have to outlive it.</p>
+  <div class="callout" style="margin-top:1.5rem">
+    <h3>The verdict</h3>
+    <p>Taproot Assets is what excellent engineering achieves <em>within</em> the classical
+    UTXO-bound model; Ultraviolet is what becomes possible by leaving it.
+    <a href="taproot.html">Full deep-dive →</a></p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Per-layer scorecard</p>
+  <h2>Ultraviolet against the field</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>RGB v0.12</th><th>Taproot Assets</th><th>Shielded CSV</th><th>Ultraviolet</th></tr>
+    <tr><td>Ownership</td><td class="no">UTXO → Schnorr</td><td class="no">UTXO → Schnorr</td><td class="no">Schnorr keys</td><td class="yes">SLH-DSA / WOTS+ (hash)</td></tr>
+    <tr><td>Receive cost</td><td class="no">O(history)</td><td class="no">O(lineage)</td><td class="yes">O(1)</td><td class="yes">O(1), measured</td></tr>
+    <tr><td>UTXO to receive?</td><td class="no">Required</td><td class="no">Required</td><td class="yes">No</td><td class="yes">No</td></tr>
+    <tr><td>Amounts hidden</td><td class="no">No (removed in v0.12)</td><td class="no">No (visible in proofs)</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+    <tr><td>History hidden from receiver</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+    <tr><td>Instant payments</td><td class="no">Via Lightning (classical)</td><td class="yes">Shipped (classical channels)</td><td class="no">—</td><td class="yes">PQ eltoo channels (+ optional receipts)</td></tr>
+    <tr><td>Contract model</td><td class="yes">General</td><td class="no">Asset-scripting</td><td class="no">Payments-focused</td><td class="yes">General (Rust on SP1)</td></tr>
+    <tr><td>PQ anything</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓ ownership, validation, encryption</td></tr>
+    <tr><td>Status</td><td class="no">Mainnet; USDT via UTEXO Jul 2026</td><td class="yes">v0.8.0; USDT on LN Mar 2026</td><td class="no">Paper (2025/068)</td><td class="no">Design + working kernel/prover</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Adjacent designs</p>
+  <h2>SuperScalar &amp; channel factories</h2>
+  <p>The strongest <em>classical</em> answer to receiving-without-a-UTXO: 127 clients behind one
+  MuSig2 taproot output, no covenants, no LSP trust — implemented and exercised on signet (July
+  2026), with a real on-chain penalty proving the "revealed-secret poison." Two contrasts: the
+  factory's entire trust model rests on a <strong>single aggregated Schnorr point</strong> holding
+  128 parties' funds — factories <em>concentrate</em> quantum exposure where Ultraviolet's keyless
+  records eliminate it. And the report's own safety-critical core ("the double-sign defense is where
+  the whole safety rests" — each signer's persisted refusal to co-sign conflicts) is the equivocation
+  problem Ultraviolet solves structurally: one deterministic nullifier, first on-chain occurrence
+  wins, no signer state to lose. Its cheater-funds-the-penalty pattern is prior art for Blacklight's
+  bonds-are-notes slashing.</p>
+  <p class="muted">Also in the field: <strong>Shielded CSV</strong> (Blockstream/Alpen/ZeroSync)
+  contributed the architecture Ultraviolet builds on — 64-byte nullifiers, proof-carrying data,
+  constant-size receive — but its nullifier check is a Schnorr verification, so it is not
+  post-quantum. <strong>RGB v0.12</strong> modernized its VM but removed confidential amounts,
+  never shipped history compression, and remains UTXO-bound. Full analysis in the
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/10-COMPARISONS.md">spec/10-COMPARISONS</a>.</p>
+</section>
+
+<footer>
+  ULTRAVIOLET · THE FIELD · July 2026 · <a href="index.html">main page</a> ·
+  <a href="darknoise.html">darknoise</a> ·
+  <a href="https://github.com/ultravienet/ultraviolet">github</a>
+</footer>
+
+</main>
+
+</body>
+</html>
