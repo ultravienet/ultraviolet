@@ -20,3 +20,4 @@ models the risk it was written for.
 | Date | Commit | Tooling | Checks | Ran by |
 |---|---|---|---|---|
 | 2026-07-26 | (pre-ledger) | quint 0.32.0 | all documented invariants, by hand during model development | posix4e + agent |
+| 2026-07-28 | a29c1e2 | quint 0.32.0 | 59/59 | tdx2 |
