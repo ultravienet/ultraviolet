@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 # The formal verification runbook: every documented invariant, one command.
 #
-# This is a MANUAL discipline, deliberately not in CI (decided 2026-07-27):
-# the deep checks are slow — channels' `naiveSettle` deadlock check took 45
-# minutes at depth 5 and depth 6 never converged — so verification runs by
-# hand, on real hardware, and the result is recorded in formal/VERIFIED.md.
-# CI keeps only the seconds-cheap rot checks (typecheck + reference paths);
-# see .github/workflows/ci.yml.
+# The fast tier runs in CI on every pull request. The complete tier is manual
+# and scheduled because channels' `naiveSettle` deadlock check took 45 minutes
+# at depth 5 and depth 6 never converged. Complete results are recorded in
+# formal/VERIFIED.md.
 #
 # Every row carries its EXPECTED outcome, and both directions are enforced:
 # an invariant that stops holding is a regression, and an attack that stops
@@ -15,9 +13,11 @@
 #
 # Bounds are the documented ones from formal/README.md, stated rather than
 # rounded up. A pass here is a bounded claim at those depths, not a proof —
-# except multihop's inductive supplyInv, which holds at all depths.
+# except multihop's inductive supplyInv, which holds at every transition depth
+# in that model's fixed five-note universe.
 #
 #   ./formal/verify.sh            # everything, cheapest models first (hours)
+#   ./formal/verify.sh fast       # CI tier: operational and cheap models
 #   ./formal/verify.sh multihop   # one model's rows only
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -34,11 +34,24 @@ ONLY="${1:-}"
 PASS=0; FAIL=0; RAN=0
 declare -a FAILURES
 
+want () {
+  case "$ONLY" in
+    ""|"$1") return 0 ;;
+    fast)
+      case "$1" in
+        reorg|indexer|linkage|onetime|wallet_io|baserail) return 0 ;;
+        *) return 1 ;;
+      esac
+      ;;
+    *) return 1 ;;
+  esac
+}
+
 # run <expect> <model> <main> <invariant> <max-steps> [extra flags...]
 #   expect: ok | violation
 run () {
   local expect="$1" model="$2" main="$3" inv="$4" steps="$5"; shift 5
-  case "$ONLY" in ""|"$model") ;; *) return ;; esac
+  want "$model" || return
   RAN=$((RAN + 1))
   local desc="$model/$main $inv"
   local args=(verify "formal/$model.qnt" --main="$main" --invariant="$inv")
@@ -77,17 +90,43 @@ run ok        reorg deep       acceptedStaysValid 8
 run ok        reorg reconciled acceptedStaysValid 8
 echo
 
+echo "== indexer: a persistent cache over a moving RPC view =="
+run violation indexer midscanUnsafe noMixedSnapshot 6
+run ok        indexer midscanSafe   noMixedSnapshot 8
+run ok        indexer midscanSafe   answersCanonical 8
+run violation indexer shortUnsafe   answersCanonical 6
+run ok        indexer shortSafe     answersCanonical 8
+echo
+
 echo "== linkage: off-circuit ancestry linkage =="
 run violation linkage unchecked noSplicedHistory 8    # fabricateHop splices a history
 run ok        linkage checked   noSplicedHistory 8
 echo
 
 echo "== onetime: the WOTS+ never-re-sign discipline =="
-run violation onetime naive   noKeyReuse          8   # naive wallet discloses the key
+run violation onetime naive   noKeyReuse          8   # naive wallet leaves the one-time regime
 run ok        onetime guarded noKeyReuse          8
 run violation onetime guarded eventuallySpendable 8   # ...but freezes live coin
 run ok        onetime replay  noKeyReuse          8   # replay is both safe and live
 run ok        onetime replay  eventuallySpendable 8
+echo
+
+echo "== wallet I/O: lock, sync, and atomic replacement =="
+run violation wallet_io current        noExposedKeyReuse     8
+run violation wallet_io current        publishedIsRemembered 5
+run violation wallet_io current        walletFileSurvives    4
+run ok        wallet_io lockedBuffered noExposedKeyReuse     8
+run violation wallet_io lockedBuffered publishedIsRemembered 5
+run violation wallet_io lockedBuffered walletFileSurvives    4
+run ok        wallet_io lockedAtomicBuffered noExposedKeyReuse     8
+run violation wallet_io lockedAtomicBuffered publishedIsRemembered 5
+run ok        wallet_io lockedAtomicBuffered walletFileSurvives    8
+run ok        wallet_io lockedSyncedInPlace noExposedKeyReuse     8
+run violation wallet_io lockedSyncedInPlace publishedIsRemembered 8
+run violation wallet_io lockedSyncedInPlace walletFileSurvives    4
+run ok        wallet_io hardened       noExposedKeyReuse     10
+run ok        wallet_io hardened       publishedIsRemembered 10
+run ok        wallet_io hardened       walletFileSurvives    10
 echo
 
 echo "== multihop: supply conservation across hops =="
@@ -101,7 +140,6 @@ echo
 
 echo "== baserail: publication liveness, splits, the griefing residue =="
 run ok        baserail atomic       paymentRemainsPossible 8
-run ok        baserail ideal        paymentRemainsPossible 8
 run violation baserail griefable    paymentRemainsPossible 8  # [FRONTRUN], reproduced
 run ok        baserail griefable    nobodyElseGetsPaid     8  # ...and safety holds there
 run violation baserail noMerge      paymentRemainsPossible 8  # why the wallet splits
@@ -112,7 +150,7 @@ run ok        baserail splitGriefed nobodyElseGetsPaid     8
 run violation baserail splitGriefed paymentRemainsPossible 8  # a burnt note is burnt
 echo
 
-echo "== channels: dispute rules (SLOW — naiveSettle took ~45 min) =="
+echo "== channels: bounded dispute-rule checks (SLOW — naiveSettle took ~45 min) =="
 for m in disciplined equivocating offline eclipsed; do
   case "$m" in
     disciplined) run ok        channels "$m" noTheft 6 ;;

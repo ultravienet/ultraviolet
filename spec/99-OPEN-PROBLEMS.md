@@ -40,10 +40,11 @@ Fixed. See [Closed](#closed).
 
 **Blocks:** channels ([07](07-CHANNELS.md)). Not v1's base rail.
 
-The mechanism is specified and `formal/channels.qnt` supports the spec on all four of its
-claims: settlement never deadlocks, the never-re-sign discipline is load-bearing rather than
-decorative (dropping it alone produces theft by equivocation), and both admitted residues —
-offline past `W`, storage eclipsed — reproduce as theft.
+The mechanism is specified and `formal/channels.qnt` supports the spec with bounded checks
+of all four claims: settlement retains a winner throughout the searched states, the
+never-re-sign discipline is load-bearing rather than decorative (dropping it alone produces
+theft by equivocation), and both admitted residues — offline past `W`, storage eclipsed —
+reproduce as theft. These are not inductive all-reachable-state results.
 
 **What is still owed is human adversarial review**, now narrower: attack the model's
 assumptions rather than the rules. The assumption the model explicitly cannot see is that
@@ -484,8 +485,8 @@ the missing 400 was unrecoverable, its only copy of the lineage deleted.
   `DefaultHasher`, whose output is explicitly unstable across Rust releases, while
   `rust-toolchain.toml` floats on `stable` — so `rustup update` would have renamed every
   reservation file, every slot would have read as unused, and two notes would have landed under
-  one WOTS+ key. That is key disclosure with no visible cause. Now SHA-256, pinned by a
-  known-vector test.
+  one WOTS+ key. That is an unsafe second-payload reuse with no visible cause. Now SHA-256,
+  pinned by a known-vector test.
 
 **Per-peer batches, added 2026-07-28.** `uv address --for <peer>` records which slot range went
 to whom in a sidecar ledger, and `uv status` lists what is outstanding. The mechanism was

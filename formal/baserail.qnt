@@ -37,16 +37,16 @@
 // they *gain nothing* and the damage is real anyway.
 //
 // ---- Liveness technique ----
-// Deadlock-freedom, as an invariant with no step bound: the payment must never
-// become impossible. This is the safety-shaped *necessary condition* for
-// liveness — if it fails, no amount of scheduling saves the payment — and it is
-// used here for the same reason as in `channels.qnt`: a bounded "paid by step K"
-// invariant would report the simulator's choices rather than the protocol's.
+// Viability expressed as an invariant: the payment must never become
+// impossible. This is a *necessary condition* for liveness — if it fails, no
+// amount of scheduling saves the payment — and avoids asking a bounded checker
+// to simulate fairness. The verification evidence remains bounded to the steps
+// in `verify.sh`; this is not an inductive all-reachable-states result.
 //
 // Run (safety — expected to hold everywhere):
 //   quint verify formal/baserail.qnt --main=griefable --invariant=nobodyElseGetsPaid --max-steps=8
 // Run (liveness):
-//   quint verify formal/baserail.qnt --main=ideal     --invariant=paymentRemainsPossible --max-steps=8
+//   quint verify formal/baserail.qnt --main=atomic    --invariant=paymentRemainsPossible --max-steps=8
 //   quint verify formal/baserail.qnt --main=griefable --invariant=paymentRemainsPossible --max-steps=8
 //   quint verify formal/baserail.qnt --main=noMerge   --invariant=paymentRemainsPossible --max-steps=8
 
@@ -97,16 +97,16 @@ module rail {
     valueOf(b.inputs) >= TARGET
       and b.inputs.forall(n => not(hasRecord(n)) or recorded.get(n) == b.id)
 
-  // ---- SAFETY ----
-  // A first occurrence either settles one of Alice's own transfers or destroys
-  // the note. Nothing a third party does can redirect the money to anyone else.
-  // This is precisely why the failure got called "griefing": it holds, in every
-  // run, including the ones where Alice loses her money outright.
+  // ---- RECORD PROVENANCE ----
+  // Every first occurrence is either the distinguished garbage value or names a
+  // bundle built in this model. Recipients and ownership are absent, so this is
+  // not by itself a non-theft theorem; the adversary has no receive action by
+  // construction. The intentionally historical name is kept for CLI stability.
   val nobodyElseGetsPaid: bool =
     recorded.keys().forall(n =>
       recorded.get(n) == GARBAGE or bundles.exists(b => b.id == recorded.get(n)))
 
-  // ---- LIVENESS (deadlock-freedom) ----
+  // ---- LIVENESS NECESSARY CONDITION (viability) ----
   // The payment is never rendered impossible: either it settled, or some funding
   // set or already-built bundle can still get there.
   val paymentRemainsPossible: bool =
@@ -143,7 +143,7 @@ module rail {
   // arbitrary value of the element type. Without the guard, `publishReal` fired
   // before any bundle existed, bound a nullifier to a bundle id nobody had
   // produced, and manufactured violations of *both* properties — including in
-  // `ideal`, where nothing adversarial happens at all. Any action drawing from a
+  // `atomic`, where nothing adversarial happens at all. Any action drawing from a
   // set a previous action populates needs this guard, or the model invents its
   // own counterexamples.
   action broadcast = all {

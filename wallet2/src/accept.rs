@@ -95,7 +95,10 @@ impl Rejected {
     /// by definition does not have. So this is not a hole an attacker can aim
     /// at: to get their mail retained they must first send something real.
     pub fn is_permanent(&self) -> bool {
-        !matches!(self, Rejected::NoRecord(_) | Rejected::InsufficientDepth(_))
+        !matches!(
+            self,
+            Rejected::NoRecord(_) | Rejected::InsufficientDepth(_) | Rejected::ViewIncomplete(_)
+        )
     }
 }
 
@@ -244,7 +247,11 @@ mod tests {
     /// you re-verify it forever.
     #[test]
     fn only_settlement_verdicts_are_worth_retrying() {
-        for transient in [Rejected::NoRecord(0), Rejected::InsufficientDepth(3)] {
+        for transient in [
+            Rejected::NoRecord(0),
+            Rejected::InsufficientDepth(3),
+            Rejected::ViewIncomplete(2),
+        ] {
             assert!(
                 !transient.is_permanent(),
                 "{transient:?} can still become valid — it must be kept"

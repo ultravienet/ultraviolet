@@ -1,20 +1,21 @@
 # Verification ledger
 
-Formal verification here is a **manual discipline**: the deep checks are too
-slow for CI (channels' `naiveSettle` took ~45 minutes at depth 5), so they run
-by hand via `./formal/verify.sh`, and every full run is recorded below. Manual
-verification without a ledger silently becomes *no* verification — this file is
-what makes "when did we last actually run this?" answerable.
+Formal verification has two tiers. The fast bounded suite runs in CI on every
+pull request; the deep checks are scheduled and can be run manually because
+channels' `naiveSettle` took ~45 minutes at depth 5. Every complete run is
+recorded below. Verification without a ledger silently becomes *no*
+verification — this file makes "when did we last actually run this?"
+answerable.
 
-What CI does check, on every push: `quint typecheck` over all six models, and
-that every source path the models cite exists — the rot that actually happened
-(eight dead citations after two crate renames) rather than the regressions that
-have not.
+What CI checks on every pull request: `quint typecheck` over all eight models,
+every cited source path, and the fast expected-result matrix. The scheduled
+workflow runs the complete matrix and preserves its transcript as an artifact.
 
 A row here is a bounded claim at the depths documented in `formal/README.md`,
-not a proof — except multihop's inductive `supplyInv`, which holds at all
-depths. `verify.sh` enforces expected *violations* too: an attack that stops
-reproducing means the model no longer models the risk it was written for.
+not a proof — except multihop's inductive `supplyInv`, which holds at every
+transition depth in its fixed five-note universe. `verify.sh` enforces expected
+*violations* too: an attack that stops reproducing means the model no longer
+models the risk it was written for.
 
 | Date | Commit | Tooling | Checks | Ran by |
 |---|---|---|---|---|

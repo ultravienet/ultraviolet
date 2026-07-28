@@ -180,15 +180,21 @@ impl RecordIndex {
     /// Note `>=`, not `>`. The fork block's *own* records must go; leaving one
     /// behind is a phantom first occurrence that outranks the real one forever.
     pub fn rollback_to(&mut self, fork_height: u64) {
-        self.state.first.retain(|_, e| e.height < fork_height);
-        self.state.recent.retain(|(h, _)| *h < fork_height);
-        self.state.scanned_through = self
-            .state
-            .recent
-            .last()
-            .cloned()
-            .filter(|(h, _)| *h < fork_height);
+        self.discard_from(fork_height);
         self.state.rollbacks += 1;
+    }
+
+    /// Abort an uncommitted scan range without reporting a chain rollback.
+    ///
+    /// `BitcoinChain` scans several RPC responses into memory, then validates
+    /// that the tip stayed fixed for the whole batch. If the node moved during
+    /// those calls, every staged entry at `from` and above must disappear before
+    /// the lookup returns `Unanswerable`. This is transaction rollback, not a
+    /// confirmed Bitcoin reorg, so it does not advance the wallet-facing epoch.
+    pub(crate) fn discard_from(&mut self, from: u64) {
+        self.state.first.retain(|_, e| e.height < from);
+        self.state.recent.retain(|(h, _)| *h < from);
+        self.state.scanned_through = self.state.recent.last().cloned().filter(|(h, _)| *h < from);
     }
 
     /// Throw everything away and rescan from the floor. Used when a reorg is
@@ -383,6 +389,34 @@ mod rollback {
         ix.rollback_to(50);
         assert_eq!(ix.next_height(), 50);
         assert!(ix.tip_scanned().is_none());
+    }
+
+    /// A moving RPC view must not leave a half-scanned fork in memory. This is
+    /// the implementation counterpart of `formal/indexer.qnt`'s `midscanUnsafe`
+    /// counterexample.
+    #[test]
+    fn aborting_a_scan_discards_every_staged_entry() {
+        let d = tempfile::tempdir().unwrap();
+        let mut ix = fresh(&d, 0);
+        ix.insert(&rec(1, 1), 0, 0);
+        ix.advance_to(0, "stable".into());
+        let epoch = ix.rollback_epoch();
+
+        ix.insert(&rec(2, 2), 1, 0);
+        ix.advance_to(1, "old-fork-1".into());
+        ix.insert(&rec(3, 3), 2, 0);
+        ix.advance_to(2, "new-fork-2".into());
+        ix.discard_from(1);
+
+        assert!(ix.get(&[1u8; 32]).is_some(), "committed prefix survives");
+        assert!(ix.get(&[2u8; 32]).is_none(), "old-fork staging removed");
+        assert!(ix.get(&[3u8; 32]).is_none(), "new-fork staging removed");
+        assert_eq!(ix.next_height(), 1);
+        assert_eq!(
+            ix.rollback_epoch(),
+            epoch,
+            "aborting an uncommitted batch is not a detected chain rollback"
+        );
     }
 
     /// A reorg deeper than the window rebuilds. The floor is kept; everything

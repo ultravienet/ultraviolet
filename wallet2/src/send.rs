@@ -277,8 +277,9 @@ pub fn rebroadcast(
 /// step *between* them, which is the one that matters. The sign-log entry must
 /// reach durable storage before the record reaches Bitcoin — a crash in between
 /// leaves a signature the wallet cannot remember making, and the retry signs a
-/// second different message with the same one-time key. That is key disclosure,
-/// the failure this whole module is shaped around.
+/// second different message with the same one-time key. That violates WOTS+'s
+/// one-time security contract and may enable forgery, the failure this whole
+/// module is shaped around.
 ///
 /// The CLI did call `save_wallet` in the right place. Nothing required it to,
 /// and "every caller happens to do the right thing" is precisely the shape of

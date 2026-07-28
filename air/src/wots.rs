@@ -23,9 +23,10 @@
 //!
 //! ## The one-time rule, which is not optional
 //!
-//! Signing twice with one key **reveals the private key**. WOTS+ leaks a chain
-//! element at each signature, and two signatures over different messages expose
-//! enough of the chains to forge. Hence `owner_key` must be **per note**
+//! Signing two different messages with one key violates WOTS+'s one-time
+//! security assumption. Each signature exposes one value from every hash chain;
+//! combining distinct exposures can enable forgery, although it does not in
+//! general reveal the entire private key. Hence `owner_key` must be **per note**
 //! (spec/99), and the never-re-sign discipline is protocol-wide.
 //!
 //! ## Parameters
@@ -346,8 +347,9 @@ mod tests {
     /// *identical* payload when a signed-but-unsettled transfer must be
     /// rebroadcast — which reveals nothing only because it reproduces the one
     /// signature that already exists. If signing ever became randomized (a
-    /// blinded or hedged variant, say), that recovery path would silently turn
-    /// into key disclosure, so this test guards the model's assumption.
+    /// blinded or hedged variant, say), that recovery path could emit a second
+    /// distinct signature and leave the scheme's one-time security regime, so
+    /// this test guards the model's assumption.
     #[test]
     fn signing_is_deterministic() {
         let perm = permutation();

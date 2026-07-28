@@ -1,9 +1,10 @@
 // Ultraviolet — WOTS+ one-time keys: safety AND liveness, because they conflict.
 //
 // Dropping SLH-DSA for WOTS+ introduces a new failure class: **signing two
-// different messages with one key reveals the private key**. Not degraded
-// security — total loss, and anyone holding both signatures can spend everything
-// that key owns.
+// different messages with one key violates the scheme's one-time security
+// assumption and may enable signature forgery. The model records that forbidden
+// event directly; it does not pretend to derive a particular cryptanalytic
+// forgery from two abstract payload ids.
 //
 // So the protocol needs per-note keys plus a never-re-sign discipline. This model
 // asks two questions:

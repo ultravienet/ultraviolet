@@ -75,21 +75,21 @@ without touching consensus. It is left open deliberately ([99](99-OPEN-PROBLEMS.
 
 ## One-time keys: never re-sign, and never *forget what you signed*
 
-Moving spend authorization from SLH-DSA to WOTS+ ([04](04-PROOFS.md)) buys most of the proving cost back and introduces one new failure class, which is severe and must be designed for here rather than discovered in the wallet: **signing two different messages with one WOTS+ key reveals the private key.** Not degraded security — anyone holding both signatures can spend everything that key owns. Keys are therefore per-note, and a wallet must never sign twice.
+Moving spend authorization from SLH-DSA to WOTS+ ([04](04-PROOFS.md)) buys most of the proving cost back and introduces one new failure class, which is severe and must be designed for here rather than discovered in the wallet: **signing two different messages with one WOTS+ key violates the scheme's one-time security assumption and may enable forgery.** It does not generally reveal the entire private key, but the reusable-signature guarantees no longer apply. Keys are therefore per-note, and a wallet must never sign two different payloads.
 
 `formal/onetime.qnt` checks what that discipline costs, and the answer is that the obvious version of it is safe and **freezes live money**:
 
 | Discipline | Key ever signs twice? | Note always spendable? |
 |---|---|---|
-| Trust the wallet's own memory | **no — total loss** | no |
-| Persist "this key has signed" | yes, safe | **no — permanent freeze** |
-| Persist *what* was signed, and replay it | yes, safe | yes |
+| Trust the wallet's own memory | **yes — unsafe** | no |
+| Persist "this key has signed" | no | **no — permanent freeze** |
+| Persist *what* was signed, and replay it | no different payload | yes |
 
 The freeze is not exotic and needs no backup restore. Sign a transfer; its record loses a first-occurrence race or a reorg drops it. Bitcoin still shows the coin unspent, so the wallet sees it as spendable — and the log says the key has signed. A wallet that only knows *that* it signed can do nothing but refuse, forever, while the coin sits there.
 
 **The rule, therefore: the sign log records the payload, not a flag.** WOTS+ signing is deterministic — one key and one message produce one signature, byte for byte — so re-signing the *identical* payload reproduces the signature that already exists and discloses nothing new. Rebroadcast replays; it never re-signs something different. This is what makes the third row of that table possible, and it is the reason the log must be a record of transfers rather than a set of spent-key markers.
 
-Two consequences worth stating plainly. Determinism is now **load-bearing**, so a hedged or blinded signing variant would silently convert this recovery path into key disclosure; it is pinned by `air/src/wots.rs::signing_is_deterministic`. And a wallet does *not* need persisted state to learn which notes settled: nullifiers are derived deterministically from the note, so rescanning the chain recovers that for free. Persistence is load-bearing only for the window between signing and settlement.
+Two consequences worth stating plainly. Determinism is now **load-bearing**, so a hedged or blinded signing variant could silently make replay emit a second distinct signature and leave the one-time security regime; it is pinned by `air/src/wots.rs::signing_is_deterministic`. And a wallet does *not* need persisted state to learn which notes settled: nullifiers are derived deterministically from the note, so rescanning the chain recovers that for free. Persistence is load-bearing only for the window between signing and settlement.
 
 ## Recovery
 

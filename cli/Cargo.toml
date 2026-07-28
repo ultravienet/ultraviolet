@@ -35,3 +35,10 @@ rpassword = "7"
 # (spec/99 [NO-BYTE-IDENTITY]). Already in the lockfile via `uv-envelope`, so
 # this adds nothing to the dependency closure.
 sha2 = "0.10"
+# Advisory OS locks serialize wallet and address-reservation read/modify/write
+# transactions across independent `uv` processes. A process-local mutex cannot
+# protect a one-time signing key from two CLI invocations.
+fs2 = "0.4"
+
+[dev-dependencies]
+tempfile = "3"

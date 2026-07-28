@@ -90,19 +90,13 @@ jobs:
       - name: Reorgs, on a real node
         run: ./demo/regtest.sh
 
-  # The formal models' *rot* checks, not their verification.
-  #
-  # Verification is manual and stays manual (formal/verify.sh, logged in
-  # formal/VERIFIED.md): the deep runs are too slow for a push — channels'
-  # `naiveSettle` took ~45 minutes at depth 5 and depth 6 never converged.
-  #
-  # What runs here is the failure that actually happened: after two crate
-  # renames and the zkVM removal, formal/ cited eight source paths that were
-  # gone, including the test named twice as the real-code replay of the
-  # inflation attack. Nothing turned red, and the models kept being quoted as
-  # evidence. These two checks take seconds and would have caught it.
+  # Fast formal feedback on every push. The complete matrix remains scheduled
+  # and manual because channels/naiveSettle alone has taken ~45 minutes, but the
+  # operational models and their expected counterexamples finish in seconds.
+  # Expected violations are assertions: if an attack stops reproducing, the
+  # model changed and CI must make that visible.
   formal:
-    name: formal models (typecheck + references)
+    name: formal models (fast bounded suite)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -122,6 +116,8 @@ jobs:
           done
       - name: Every cited source path exists
         run: ./formal/check-refs.sh
+      - name: Fast bounded checks and expected counterexamples
+        run: ./formal/verify.sh fast
 
   audit-deps:
     name: dependency advisories

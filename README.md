@@ -163,18 +163,19 @@ sweep found that **eleven of seventeen constraints in `wots_air.rs` survived del
 — not redundant, but not isolated by any test either. It explains both reasons and what
 an isolating test looks like.
 
-Formal models live in [`formal/`](formal/) — six Quint models covering supply
-conservation, reorgs, off-circuit linkage, WOTS+ one-time keys, the channel dispute
-machine, and base-rail liveness. `formal/README.md` records what each one assumes, what
-the adversary controls, and the eight modelling and tooling traps that produced
-confident-looking wrong answers along the way.
+Formal models live in [`formal/`](formal/) — eight Quint models covering ancestry
+conservation, reorg policy, persistent indexing, off-circuit linkage, WOTS+ one-time
+keys, wallet durability/concurrency, the channel dispute machine, and base-rail
+viability. [`formal/ASSURANCE.md`](formal/ASSURANCE.md) labels every result as a
+counterexample, bounded check, or inductive check and maps it to its Rust bridge.
 
 CI (`.github/workflows/ci.yml`) runs fmt, clippy with `-D warnings`, the full test
 suite and the end-to-end demo; a second job runs `demo/regtest.sh` against a real
-`bitcoind` (four reorg cases); a third typechecks every Quint model and fails if any
-source path they cite has gone missing — the rot that actually happened after two crate
-renames; and a fourth runs dependency advisories (`cargo audit`: vulnerabilities fail
-the build, unmaintained/unsound/yanked crates are reported without failing).
+`bitcoind` (four reorg cases); a third typechecks every Quint model, checks every cited
+path, and runs the fast bounded formal suite; and a fourth runs dependency advisories
+(`cargo audit`: vulnerabilities fail the build, unmaintained/unsound/yanked crates are
+reported without failing). The complete formal matrix remains scheduled/manual because
+the channel rows are much slower.
 
 Draft, July 2026. Design + working core + local and signet demos; no professional
 security review.

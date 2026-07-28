@@ -46,12 +46,11 @@
 // what makes "the honest party's entitlement" well-defined.
 //
 // ---- Liveness technique ----
-// **Deadlock-freedom**, as a true invariant with no step bound: whenever a claim
-// is backed, the settlement rule must have a winner, so settlement is always
-// *enabled*. See `settlementNeverDeadlocks` for why the bounded-liveness form
-// this originally used had to be abandoned — it violated even in the fully
-// disciplined module, for reasons that were about the simulator rather than the
-// protocol.
+// **Viability expressed as an invariant**: whenever a claim is backed, the
+// settlement rule must have a winner, so settlement is *enabled*. This removes
+// scheduler fairness from the property, but `verify.sh` still searches it only
+// to the documented finite depth. See `settlementNeverDeadlocks` for why the
+// earlier "settled by step K" form measured the scheduler instead.
 //
 // The split this leaves is worth naming: settlement being always possible is
 // proven here; settlement being *taken* requires a party to act within W, which
@@ -175,10 +174,10 @@ module channel {
   // without fairness assumptions, so the bound was measuring the simulator, not
   // the protocol.
   //
-  // Deadlock-freedom is the right shape here, and it is stronger than the bound
-  // would have been: no step count, no fairness, and it holds at every reachable
-  // state. It is worth being exact about the split it leaves behind. This proves
-  // settlement is always *possible*; whether someone actually acts is spec/07's
+  // Viability is the right property shape here: it asks whether settlement is
+  // possible without requiring a fair scheduler to take it. The current model
+  // checking evidence is nevertheless bounded; it is not an inductive proof
+  // over every reachable state. Whether someone actually acts is spec/07's
   // openly admitted liveness assumption, and `offline` is what its failure costs.
   // The bound worked in `onetime.qnt` only because nothing there ever unfreezes a
   // note, which made "still frozen at K" genuinely terminal.

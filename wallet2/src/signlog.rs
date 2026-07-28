@@ -36,7 +36,8 @@ pub struct SignedSpend {
 #[derive(Debug, PartialEq, Eq)]
 pub enum LogError {
     /// The note already signed a DIFFERENT payload. Proceeding would be key
-    /// disclosure; the caller must replay the stored entry instead.
+    /// reuse outside WOTS+'s security contract; the caller must replay the
+    /// stored entry instead.
     NeverResign,
 }
 
@@ -49,8 +50,9 @@ pub enum LogError {
 /// this log on the input note's commitment instead assumed index and note were
 /// one-to-one — and nothing enforced that. Two payments to the same address
 /// slot with different amounts produce two notes with different commitments and
-/// the *same* index; the log saw two distinct keys and permitted signing both,
-/// with one key. That is total key disclosure, and it needed no attacker: two
+/// the *same* index; the log saw two distinct keys and permitted signing both
+/// with one key. That violates the scheme's one-time security assumption and
+/// may enable forgery, and it needed no attacker: two
 /// payers holding the same address file each track their own slot reservations
 /// and both start at zero.
 ///
@@ -146,8 +148,8 @@ mod tests {
         log.put(5, spend(d(1), 30)).unwrap();
         // Identical payload: idempotent (this is the rebroadcast path).
         log.put(5, spend(d(1), 30)).unwrap();
-        // A different payload for the same *key*: the exact mistake that
-        // reveals a WOTS+ private key. Refused.
+        // A different payload for the same *key*: the exact reuse WOTS+'s
+        // security contract excludes. Refused.
         assert_eq!(log.put(5, spend(d(1), 31)), Err(LogError::NeverResign));
         // The stored entry is the original, untouched.
         assert_eq!(log.get(5).unwrap().transfer.outputs[0], d(30));
@@ -157,9 +159,10 @@ mod tests {
     ///
     /// Two payments to one address slot produce two notes with different
     /// commitments and the *same* signing key. Keyed by commitment, the log saw
-    /// two unrelated entries and permitted both — one key, two signatures, total
-    /// disclosure. Keyed by index it is a refusal, and no attacker is needed to
-    /// reach it: two payers sharing an address file both start at slot zero.
+    /// two unrelated entries and permitted both — one key, two different
+    /// signatures, and no longer a one-time signature scheme. Keyed by index it
+    /// is a refusal, and no attacker is needed to reach it: two payers sharing
+    /// an address file both start at slot zero.
     #[test]
     fn two_notes_sharing_a_signing_key_cannot_both_be_signed() {
         let mut log = SignLog::new();

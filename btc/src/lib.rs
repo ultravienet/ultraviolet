@@ -92,6 +92,55 @@ pub struct BitcoinChain {
     index: std::sync::Mutex<RecordIndex>,
 }
 
+/// Reconcile an index checkpoint with a canonical tip.
+///
+/// Kept independent of RPC so the state-machine cases in
+/// `formal/indexer.qnt` have executable Rust counterparts. In particular, a
+/// shorter chain is not reconciled merely by deleting blocks above its new
+/// tip: the retained hash at that tip must still be compared, because the fork
+/// may have started below it.
+fn reconcile_index_tip<E>(
+    ix: &mut RecordIndex,
+    tip: u64,
+    mut canonical_hash: impl FnMut(u64) -> Result<String, E>,
+) -> Result<bool, E> {
+    let Some((mut at, mut stored)) = ix.tip_scanned() else {
+        return Ok(false);
+    };
+    let mut changed = false;
+
+    if at > tip {
+        // If the new tip is older than every checkpoint in the bounded window,
+        // there is no hash from which a safe fork point can be inferred.
+        if !ix.recent().any(|(h, _)| h <= tip) {
+            ix.rebuild();
+            return Ok(true);
+        }
+        ix.rollback_to(tip + 1);
+        changed = true;
+        let Some(pair) = ix.tip_scanned() else {
+            ix.rebuild();
+            return Ok(true);
+        };
+        (at, stored) = pair;
+    }
+
+    if canonical_hash(at)? == stored {
+        return Ok(changed);
+    }
+
+    let window: Vec<(u64, String)> = ix.recent().collect();
+    for (h, hash) in window {
+        if h <= tip && canonical_hash(h)? == hash {
+            ix.rollback_to(h + 1);
+            return Ok(true);
+        }
+    }
+
+    ix.rebuild();
+    Ok(true)
+}
+
 impl BitcoinChain {
     /// Connect to a node's wallet RPC endpoint
     /// (`http://host:port/wallet/<name>`), user/pass auth.
@@ -225,10 +274,50 @@ impl BitcoinChain {
         self.detect_reorg(&mut ix, tip)?;
         let from = ix.next_height();
         if from <= tip {
-            self.index_blocks(&mut ix, from, tip)?;
-            ix.save();
+            self.index_stable_range(&mut ix, from, tip)?;
         }
         Ok(ix.get(nf).map(|(rec, at)| (rec, at.height, tip)))
+    }
+
+    /// Index one transactionally stable range.
+    ///
+    /// RPC calls are not a snapshot. A reorg between two heights could combine
+    /// records from the old prefix with the new tip, whose final hash would make
+    /// that mixed index look canonical on every later call. Stage the range,
+    /// require every block to extend the one immediately before it, and commit
+    /// only if the indexed tip and the node's tip both equal the snapshot hash.
+    fn index_stable_range(
+        &self,
+        ix: &mut RecordIndex,
+        from: u64,
+        tip: u64,
+    ) -> Result<(), bitcoincore_rpc::Error> {
+        let expected_tip = self.rpc.get_block_hash(tip)?;
+        if let Err(e) = self.index_blocks(ix, from, tip) {
+            ix.discard_from(from);
+            return Err(e);
+        }
+        if ix.tip_scanned() != Some((tip, expected_tip.to_string())) {
+            ix.discard_from(from);
+            ix.save();
+            return Err(bitcoincore_rpc::Error::UnexpectedStructure);
+        }
+        match self.rpc.get_block_hash(tip) {
+            Ok(actual) if actual == expected_tip => {
+                ix.save();
+                Ok(())
+            }
+            Ok(_) => {
+                ix.discard_from(from);
+                ix.save();
+                Err(bitcoincore_rpc::Error::UnexpectedStructure)
+            }
+            Err(e) => {
+                ix.discard_from(from);
+                ix.save();
+                Err(e)
+            }
+        }
     }
 
     /// Does this index cover the whole chain, or does it start part-way?
@@ -255,41 +344,11 @@ impl BitcoinChain {
     /// from a stale height with `saturating_sub`, a withdrawn record reported
     /// depth 1 and then got *deeper* with every new block.
     fn detect_reorg(&self, ix: &mut RecordIndex, tip: u64) -> Result<(), bitcoincore_rpc::Error> {
-        let Some((at, stored)) = ix.tip_scanned() else {
-            return Ok(()); // nothing scanned yet, nothing to invalidate
-        };
-
-        // A chain shorter than what we scanned is a reorg, proven for free.
-        if at > tip {
-            ix.rollback_to(tip + 1);
+        if reconcile_index_tip(ix, tip, |height| {
+            self.rpc.get_block_hash(height).map(|h| h.to_string())
+        })? {
             ix.save();
-            return Ok(());
         }
-
-        if self.rpc.get_block_hash(at)?.to_string() == stored {
-            return Ok(());
-        }
-
-        // Diverged. Walk back through the window to find where the chains agree.
-        // Collected first: the walk queries the node, and the rollback mutates
-        // the index, so they cannot share a borrow.
-        let window: Vec<(u64, String)> = ix.recent().collect();
-        for (h, hash) in window {
-            if h > tip {
-                continue;
-            }
-            if self.rpc.get_block_hash(h)?.to_string() == hash {
-                ix.rollback_to(h + 1);
-                ix.save();
-                return Ok(());
-            }
-        }
-
-        // Deeper than the window. Rebuild from the floor: rolling back to the
-        // oldest hash held would look correct and be wrong, because the fork may
-        // be below it.
-        ix.rebuild();
-        ix.save();
         Ok(())
     }
 
@@ -301,9 +360,29 @@ impl BitcoinChain {
         from: u64,
         to: u64,
     ) -> Result<(), bitcoincore_rpc::Error> {
+        // Establish the left edge of the range from the node, then bind it to
+        // the durable checkpoint when this is a continuation. This closes the
+        // race between `detect_reorg` and the first block fetch: a fork in that
+        // gap cannot splice a new suffix onto an old indexed prefix.
+        let mut previous = if from == 0 {
+            None
+        } else {
+            Some(self.rpc.get_block_hash(from - 1)?)
+        };
+        if let (Some(parent), Some((height, stored))) = (previous, ix.tip_scanned()) {
+            if height + 1 == from && parent.to_string() != stored {
+                return Err(bitcoincore_rpc::Error::UnexpectedStructure);
+            }
+        }
+
         for h in from..=to {
             let hash = self.rpc.get_block_hash(h)?;
             let block = self.rpc.get_block(&hash)?;
+            if let Some(parent) = previous {
+                if block.header.prev_blockhash != parent {
+                    return Err(bitcoincore_rpc::Error::UnexpectedStructure);
+                }
+            }
             for (txi, tx) in block.txdata.iter().enumerate() {
                 for outp in &tx.output {
                     if !outp.script_pubkey.is_op_return() {
@@ -320,6 +399,7 @@ impl BitcoinChain {
                 }
             }
             ix.advance_to(h, hash.to_string());
+            previous = Some(hash);
         }
         Ok(())
     }
@@ -429,8 +509,7 @@ impl Chain for BitcoinChain {
             let _ = self.detect_reorg(&mut ix, tip);
             let from = ix.next_height();
             if from <= tip {
-                let _ = self.index_blocks(&mut ix, from, tip);
-                ix.save();
+                let _ = self.index_stable_range(&mut ix, from, tip);
             }
         }
     }
@@ -458,6 +537,73 @@ impl Chain for BitcoinChain {
         // durable, un-broadcast spend the replay path is built for.
         self.publish_inner(record)
             .map_err(|e| PublishError(format!("publishing the record failed: {e}")))
+    }
+}
+
+#[cfg(test)]
+mod reorg_state_machine_tests {
+    use super::*;
+
+    fn rec(nf: u8, bundle: u8) -> [u8; RECORD_BYTES] {
+        let mut r = [0u8; RECORD_BYTES];
+        r[..DIGEST_BYTES].fill(nf);
+        r[DIGEST_BYTES..].fill(bundle);
+        r
+    }
+
+    /// The `shortUnsafe` trace from `formal/indexer.qnt`: the new chain is
+    /// shorter, but its retained tip is also on a different fork. Truncating
+    /// only above that height returns one stale first occurrence.
+    #[test]
+    fn shortening_continues_hash_comparison_below_the_new_tip() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut ix = RecordIndex::load(dir.path().join("index.json"), 0);
+        ix.advance_to(0, "common".into());
+        ix.insert(&rec(1, 0xAA), 1, 0);
+        ix.advance_to(1, "old-1".into());
+        ix.advance_to(2, "old-2".into());
+        ix.advance_to(3, "old-3".into());
+
+        let changed = reconcile_index_tip(&mut ix, 2, |h| {
+            Ok::<_, ()>(
+                match h {
+                    0 => "common",
+                    1 => "new-1",
+                    2 => "new-2",
+                    _ => unreachable!(),
+                }
+                .to_string(),
+            )
+        })
+        .unwrap();
+
+        assert!(changed);
+        assert!(
+            ix.get(&[1u8; DIGEST_BYTES]).is_none(),
+            "the old fork's first occurrence must not survive"
+        );
+        assert_eq!(ix.next_height(), 1, "rescan starts after the common block");
+    }
+
+    /// A mere tip truncation with an unchanged prefix keeps valid work. This is
+    /// the control that stops the safe repair from rebuilding on every shorter
+    /// chain, rather than only when the retained hash diverges.
+    #[test]
+    fn shortening_keeps_a_hash_verified_prefix() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut ix = RecordIndex::load(dir.path().join("index.json"), 0);
+        ix.advance_to(0, "same-0".into());
+        ix.insert(&rec(1, 0xAA), 1, 0);
+        ix.advance_to(1, "same-1".into());
+        ix.advance_to(2, "same-2".into());
+        ix.insert(&rec(2, 0xBB), 3, 0);
+        ix.advance_to(3, "old-3".into());
+
+        reconcile_index_tip(&mut ix, 2, |h| Ok::<_, ()>(format!("same-{h}"))).unwrap();
+
+        assert!(ix.get(&[1u8; DIGEST_BYTES]).is_some());
+        assert!(ix.get(&[2u8; DIGEST_BYTES]).is_none());
+        assert_eq!(ix.next_height(), 3);
     }
 }
 

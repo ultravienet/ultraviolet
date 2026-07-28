@@ -52,8 +52,10 @@ STARK per hop proving a complete transfer in **~0.22 s / 208 KB** zero-knowledge
 (~0.075 s / 158 KB without hiding), and a wallet that enforces every discipline the
 formal models proved necessary. `demo/local2.sh` runs issuance, a validated two-hop
 payment, a double-spend the sign-log replays instead of re-signing, and reorg
-reconciliation — self-checking, in CI. Five Quint models back it, one of them proving
-supply conservation at all depths rather than to a search bound.
+reconciliation — self-checking, in CI. Eight Quint models cover the protocol and its
+wallet/index adapters. One ancestry invariant is inductive for every transition length
+in a fixed five-note universe; the assurance matrix labels the remaining results as
+bounded checks or counterexamples rather than calling the whole system verified.
 
 Design-stage: the client, the channel dispute state machine, the optional speed layer. **No
 professional review of the circuit code yet**, which consensus circuits need before they

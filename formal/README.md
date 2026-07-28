@@ -11,9 +11,10 @@ trip people up: Quint has no `UNCHANGED`, so every variable must be assigned in 
 reachable in 8 steps rather than a sample; and `quint typecheck` catches a class of errors TLC
 would only hit at runtime.
 
-**Scope.** These model the *protocol*: who checks what, and what an adversary can interleave.
-They do **not** model cryptography — hashes, signatures, and the recursive STARK are assumed
-sound and appear as primitives. A model finding is a design flaw, not a broken primitive.
+**Scope.** These model the *protocol*: who checks what, what an adversary can interleave, and
+which persistence/indexing steps an implementation must make atomic. They do **not** model
+cryptography — hashes, signatures, and the STARK are assumed sound and appear as primitives.
+A model finding is a protocol or integration flaw, not a broken primitive.
 
 ## Safety and liveness
 
@@ -41,10 +42,10 @@ liveness**:
 **Technique, and its limits.** Apalache's temporal-property support is thin, so liveness here is
 checked in one of two ways, and which one is used is stated per model:
 
-- **Deadlock-freedom** (`channels.qnt`, `baserail.qnt`) — a true invariant, no step bound: the
-  system never reaches a state from which progress is *impossible*. Strictly weaker than real
-  liveness, since it proves progress is possible rather than taken, but it needs no fairness
-  assumption and holds at all reachable states.
+- **Viability invariants** (`channels.qnt`, `baserail.qnt`) — the property asks whether progress
+  remains *possible*, rather than whether a scheduler eventually takes it. This avoids a fairness
+  assumption, but the checks in `verify.sh` are still bounded searches. Only an inductive check
+  would establish the invariant at every reachable state.
 - **Bounded liveness** (`onetime.qnt`) — a step counter plus "nothing is stuck at step K".
   Only sound when nothing in the model ever un-sticks the stuck thing, which is true there and
   is why the bound is honest rather than decorative.
@@ -58,12 +59,18 @@ enabled and simply had not been scheduled. **An invariant cannot distinguish "no
 
 | Model | Asks | Safety | Liveness |
 |---|---|---|---|
-| `multihop.qnt` | Do per-hop settlement checks compose? | **No** — fixed, and now proven inductively at all depths | — |
+| `multihop.qnt` | Do per-hop settlement checks compose? | **No** — fixed; inductive in its finite universe | — |
 | `reorg.qnt` | Is confirmation depth alone enough? | **No** at 1 conf | — |
+| `indexer.qnt` | Can a persistent index safely scan a moving RPC view? | **No** without transactional scans and retained-tip hash checks | — |
 | `linkage.qnt` | Does off-circuit linkage compose after the rewrite? | **No** unless the receiver checks | — |
 | `onetime.qnt` | Can a WOTS+ key be kept single-use? | Yes, with a persisted log | **Freezes** unless the log records *what* was signed |
+| `wallet_io.qnt` | What does “persisted before publish” require operationally? | Lock + sync + atomic replace | — |
 | `channels.qnt` | Does the spec/07 dispute machine hold? | Holds; both admitted residues reproduce | No deadlock — but only because unbacked claims are dropped |
 | `baserail.qnt` | Does an honest payment always complete? | Holds everywhere | **Fails three ways** |
+
+The evidence class for every row — bounded counterexample, bounded no-counterexample result, or
+inductive invariant — is listed in [`ASSURANCE.md`](ASSURANCE.md). “All depths” for `multihop`
+means all transition lengths in its fixed five-note universe, not arbitrary protocol parameters.
 
 ## `multihop.qnt` — multi-hop validity under first-occurrence records
 
@@ -189,13 +196,37 @@ absolute terms, but it changes a headline claim: **receiving is O(1) in proof ve
 stays constant-size and still removes the need to re-verify history; what it cannot remove is the
 need to confirm that history actually settled.
 
+### Proving it for every transition depth in the model
+
+`--max-steps=8` checks `noInflation` for the first eight transitions and says nothing about the
+ninth. `supplyInv` instead asks Apalache for the three inductive obligations:
+
+```bash
+quint verify formal/multihop.qnt --main=bound \
+  --inductive-invariant=supplyInv --invariant=noInflation
+#   [1/3] holds in the initial states           ✓
+#   [2/3] preserved by step                     ✓
+#   [3/3] implies noInflation                   ✓
+```
+
+That result is unbounded in transition count **inside this model's fixed universe**. The universe
+contains note ids `0..4`, whole-note transfers, and a set-valued ancestry. It is not a
+parameterized theorem over arbitrary lineage lengths, amounts, assets, or the implementation's
+ordered two-output transfers. The precise claim is: within that abstraction, any honest live
+holding has one fully settled, bound ancestry and two such live branches cannot coexist.
+
+`noInflation` is not inductive by itself: it says supply is conserved without saying *why*, so
+the induction step may begin in a fabricated state where an honest wallet holds a laundered note.
+The strengthening supplies the structure — acyclic unique bundle ids, exact ancestry extension,
+real records and notes, and fully settled honest holdings. It fails preservation for `unbound`,
+which is evidence that digest binding is load-bearing rather than decoration.
 
 ---
 
 ## `reorg.qnt` — does the confirmation policy survive a reorg?
 
-**Question.** `required_confirmations` scales depth with value (1 / 3 / 6). A reorg can change
-*which* record for a nullifier came first, and the wallet has no rollback. Is depth alone enough?
+**Question.** A reorg can change *which* record for a nullifier came first. Is confirmation depth
+alone enough, and can reconciliation safely support a shallower policy?
 
 **Answer: not at the 1-confirmation tier.**
 
@@ -211,49 +242,9 @@ quint verify formal/reorg.qnt --main=reconciled --invariant=acceptedStaysValid -
 The invariant is *everything the receiver believes it owns is still the first occurrence*. It
 breaks exactly where you would expect once it is written down: a payment accepted at depth 1
 can be reorganized out, and without rollback the wallet never finds out. **Two independent
-fixes, both proven:** wait deeper than any reorg you fear, or reconcile what you hold when the
-chain changes. `required_confirmations` currently returns 1 for values under 1,000 units, so
-the small-payment tier is the exposed one.
-
-### Proving it at every depth — the inductive invariant
-
-`--max-steps=8` proves `noInflation` for the first eight steps and says nothing about the ninth.
-The model's diameter is larger than that (four builds, five records, and up to sixteen receives),
-so the bounded result was genuinely incomplete. `supplyInv` closes it:
-
-```bash
-quint verify formal/multihop.qnt --main=bound --inductive-invariant=supplyInv --invariant=noInflation
-#   [1/3] holds in the initial states           ✓
-#   [2/3] preserved by step                     ✓
-#   [3/3] implies noInflation                   ✓
-#   [ok] No violation found  (56s)              — proven at ALL depths, no step bound
-```
-
-`noInflation` is not inductive by itself: it says supply is conserved without saying *why*, so
-the induction step may begin in a fabricated state where an honest wallet holds a laundered note.
-The strengthening supplies the structure — bundle ids unique and greater than the note they spend
-(which is what makes ancestry acyclic), lineage equal to its input's lineage plus one hop, records
-naming real bundles, notes actually existing, and the load-bearing clause that **honest holdings
-have fully settled true ancestries**. From those, two live honest notes are impossible: each is
-the end of a settled chain from note 0, `recorded` is a function so the chains coincide step for
-step, one is a prefix of the other, and the shorter one's endpoint therefore has a record — it is
-spent.
-
-Two things make this more than a box-tick:
-
-- **It fails for `unbound`, at step [2/3].** Without the digest binding, `honestHoldingsAreSettled`
-  is not preserved: a receiver accepts a note whose *presented* ancestry settled while its real one
-  did not. The binding is precisely what makes the induction close, which is a sharper statement
-  than "we found no counterexample to depth 8".
-- **The first version was inductive and useless.** Steps 1 and 2 passed; step 3 failed with a
-  state containing no bundles at all, every lineage empty, and carol holding notes 3 and 4 out of
-  thin air. `allHopsWin` over an empty ancestry is vacuously true, so two notes that never existed
-  both counted as settled. Hence the `notesExist` clause. *An invariant can be perfectly inductive
-  and still prove nothing* — only step 3 catches that.
-
-Inductive checking also requires `typeOK`, a domain constraint on every variable. It is not a
-property; Apalache needs it to construct the arbitrary states the induction step starts from, and
-refuses with "bundles is used before it is assigned" without it.
+fixes, both checked in the model:** wait deeper than any reorg you admit, or reconcile what you
+hold when the chain changes. The implementation deliberately keeps a floor of three confirmations
+for values below 100,000 and six above, even though reconciliation now exists.
 
 ### Two modelling mistakes worth recording
 
@@ -269,6 +260,40 @@ protocol result and was in fact two bugs in the model:
 
 Both produced confident-looking counterexamples. A model that fails is not automatically a
 finding — the first question is always whether the model is right.
+
+---
+
+## `indexer.qnt` — can several RPC calls be treated as one chain snapshot?
+
+**Question.** `reorg.qnt` assumes a canonical-chain oracle. The Bitcoin backend builds that view
+with one RPC call per height and persists first occurrences. Can a reorg between those calls, or a
+reorg to a shorter competing chain, make the cache answer from an orphan?
+
+**Answer: yes, in two independent traces.**
+
+```bash
+quint verify formal/indexer.qnt --main=midscanUnsafe --invariant=noMixedSnapshot --max-steps=6
+# [violation] old-fork height 1 plus new-fork heights 2..3
+quint verify formal/indexer.qnt --main=midscanSafe --invariant=answersCanonical --max-steps=8
+# [ok] staged range discarded and rescanned
+quint verify formal/indexer.qnt --main=shortUnsafe --invariant=answersCanonical --max-steps=6
+# [violation] truncation above the new tip leaves a stale retained prefix
+quint verify formal/indexer.qnt --main=shortSafe --invariant=answersCanonical --max-steps=8
+# [ok] retained-tip hash comparison continues before answering
+```
+
+The implementation bridge is deliberately small and testable:
+
+- `btc/src/lib.rs::index_stable_range` binds the range to the durable left checkpoint, checks every
+  block's parent link, and commits only when the indexed and post-scan tips both equal the
+  pre-scan tip.
+- `btc/src/index.rs::discard_from` removes every staged first occurrence when that snapshot moves.
+- `btc/src/lib.rs::reconcile_index_tip` continues hash comparison below a shorter tip rather than
+  returning after truncation.
+
+This model proves nothing about Bitcoin's consensus or RPC correctness. It checks the state
+machine required to turn non-atomic RPC responses into a cache that never returns a positive
+answer until its snapshot is coherent.
 
 ---
 
@@ -305,7 +330,8 @@ test. The `fabricateHop` action is what makes the model able to fail.
 ## `onetime.qnt` — WOTS+ one-time keys, where safety and liveness collide
 
 **Question.** Dropping SLH-DSA for WOTS+ means signing two different messages with one key
-**reveals the private key**. Can a wallet be kept single-use, and what does that cost?
+violates its one-time security assumption and may enable forgery. Can a wallet be kept
+single-use, and what does that cost?
 
 **Answer: the obvious discipline is safe and freezes live money. A third discipline is both.**
 
@@ -323,10 +349,11 @@ quint verify formal/onetime.qnt --main=replay  --invariant=eventuallySpendable -
 | `guarded` — persists "this key signed" | ok | **violation** |
 | `replay` — persists *what* it signed | ok | ok |
 
-**`naive`, depth 3 — total loss.** Sign note 3 for payload 20. Restore from backup: the log is
+**`naive`, depth 3 — one-time security is lost.** Sign note 3 for payload 20. Restore from backup: the log is
 gone, and because the transfer never settled the chain still shows the note unspent, so it comes
-back as spendable. Sign it again for payload 10. Two payloads, one key: **the private key is
-now recoverable by anyone holding both signatures.**
+back as spendable. Sign it again for payload 10. Two payloads under one WOTS key violate the
+scheme's one-time security assumptions and may enable forgeries; the model deliberately records
+that forbidden event rather than claiming to derive a particular cryptanalytic forgery.
 
 **`guarded`, depth 4 — the freeze.** Sign note 2; its record never confirms. The note returns to
 spendable — the trace admits either route, a reorg dropping the record or a restore rescanning the
@@ -342,7 +369,8 @@ a log recording *what* it signed can. That is the whole difference between `guar
 
 This model depends on that determinism, so it is pinned by a test rather than a comment —
 `air/src/wots.rs::signing_is_deterministic`. If signing ever became randomized (a hedged or
-blinded variant), the recovery path would silently turn into key disclosure.
+blinded variant), replay could emit a second distinct signature and leave WOTS+'s one-time
+security regime.
 
 **Getting the property right mattered more than getting the model right.** The first version
 asserted "every note the wallet holds is eventually spendable" and violated immediately — by
@@ -352,6 +380,45 @@ gone* from *money still on-chain and unspendable*, which is what the `settled` s
 it also removed a supposed requirement: nullifiers are derived deterministically, so a restored
 wallet can rescan the chain for its own and learn exactly which notes settled. Persistence is
 load-bearing only for the window between signing and settlement.
+
+---
+
+## `wallet_io.qnt` — what does durable persistence actually mean?
+
+**Question.** `onetime.qnt` treats a persisted sign log as ground truth. Does a successful
+in-place `write` provide that guarantee when two CLI processes race or the machine loses power?
+
+**Answer: no. Locking, syncing, and atomic replacement are three separate obligations.**
+
+```bash
+quint verify formal/wallet_io.qnt --main=current \
+  --invariant=noExposedKeyReuse --max-steps=8
+# [violation] two processes sign and publish different payloads from one snapshot
+quint verify formal/wallet_io.qnt --main=lockedBuffered \
+  --invariant=publishedIsRemembered --max-steps=5
+# [violation] write returns, publish happens, power loss drops the sign log
+quint verify formal/wallet_io.qnt --main=current \
+  --invariant=walletFileSurvives --max-steps=4
+# [violation] in-place replacement destroys the last complete wallet
+quint verify formal/wallet_io.qnt --main=hardened \
+  --invariant=noExposedKeyReuse --max-steps=10
+# [ok] bounded search with all three obligations enabled
+```
+
+`cli/src/durable.rs` is the implementation bridge: an advisory OS lock spans each wallet
+read/modify/write transaction; the sign log is written to a private same-directory temporary,
+synced, atomically renamed, and followed by a directory sync. Address-slot reservations use the
+same primitive, because reusing a slot is another one-time-key failure.
+
+The intermediate modules isolate the obligations. Locking alone closes the two-process re-sign
+trace but not power-loss durability or torn replacement. Atomic replacement preserves the last
+complete file but, without sync, a published payload can remain volatile. Sync closes that
+immediate power-loss gap, but an in-place save can later destroy even an earlier sign log. Only
+the hardened module closes all three modeled failures.
+
+The model distinguishes signatures merely constructed in volatile memory from signatures that
+were published and became observable. A crash before persistence and publication may waste work;
+it does not expose a second signature. A crash after publication must recover the exact payload.
 
 ---
 
@@ -410,11 +477,11 @@ The model cannot see that failure and does not pretend to.
 
 ---
 
-## `baserail.qnt` — every honest payment eventually completes (it does not)
+## `baserail.qnt` — can an honest payment become terminally impossible?
 
 **Question.** The base rail needs zero liveness to *receive*. Does it need any to *pay*?
 
-**Answer: yes, in three separate ways — and safety holds in all of them.**
+**Answer: yes, in three separate ways.**
 
 ```bash
 quint verify formal/baserail.qnt --main=atomic       --invariant=paymentRemainsPossible --max-steps=8  # [ok]
@@ -423,9 +490,11 @@ quint verify formal/baserail.qnt --main=griefable    --invariant=paymentRemainsP
 quint verify formal/baserail.qnt --main=noMerge      --invariant=paymentRemainsPossible --max-steps=8  # [violation]
 ```
 
-`nobodyElseGetsPaid` — every first occurrence either settles one of Alice's own transfers or
-destroys the note, and nothing redirects her money to anyone else — is **[ok] in all four**. That
-is the point of the section. Safety is intact in exactly the runs where the money is gone.
+`paymentRemainsPossible` is a viability invariant: it asks whether payment has completed or some
+funding/settlement route remains. It is a necessary condition for liveness, not an eventuality
+proof. `nobodyElseGetsPaid` is more narrowly a record-provenance check: every first occurrence is
+garbage or names a bundle built in the model. Because recipients are not represented and the
+adversary has no receive action, it must not be cited as a general non-theft theorem.
 
 **Griefing, depth 3.** Alice builds a transfer over notes 1 and 2 and broadcasts it, which reveals
 the nullifiers. A third party publishes `nf 2 → garbage`. First occurrence wins, so note 2 is bound
@@ -507,6 +576,15 @@ that fails is not automatically a finding, and a model that passes is not automa
    sanity-checking every expected violation with `quint run` at a *larger* bound first, which is
    cheap and catches exactly this.
 9. **`timeout` does not exist on macOS.** Twenty-one verification runs "timed out" instantly.
+10. **Unbounded transitions are not unbounded data.** `multihop`'s inductive check removes the
+    execution-step bound, but its universe still contains only five note ids. Calling that
+    “arbitrary lineage depth” would be a parameterization claim the model does not establish.
+11. **An ideal oracle can certify a broken adapter.** `reorg.qnt` was sound for confirmation
+    policy and unable to see either persistent-index race, because canonical lookup was one atomic
+    expression. `indexer.qnt` now models the RPC/cache boundary separately.
+12. **No refinement mapping exists yet.** Rust regression tests replay the critical traces and
+    source references are checked in CI, but neither proves every implementation transition
+    refines a Quint action. [`ASSURANCE.md`](ASSURANCE.md) labels this gap explicitly.
 
 
 ## `split` — the wallet's answer to `noMerge`

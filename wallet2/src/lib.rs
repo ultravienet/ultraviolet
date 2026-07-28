@@ -135,7 +135,8 @@ mod tests {
     }
 
     /// And a failing write must stop the publish outright — not warn, not
-    /// continue. "Published but not logged" is the state that discloses a key.
+    /// continue. "Published but not logged" is the state that can make a retry
+    /// violate WOTS+'s one-time security assumption.
     #[test]
     fn a_failed_write_publishes_nothing() {
         let cfg = hiding_config();

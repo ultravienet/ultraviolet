@@ -33,6 +33,7 @@
 //! Issuance policy — who may mint an asset, how the anchor is published — is
 //! spec/02+09 work.
 
+mod durable;
 mod vault;
 
 use uv_cli::transport::{Directory, Relay, SignalCli, Transport};
@@ -221,6 +222,9 @@ struct Bundle {
 
 fn wallet_path(home: &Path, name: &str) -> PathBuf {
     home.join("wallets").join(format!("{name}.uvw"))
+}
+fn wallet_lock_path(home: &Path, name: &str) -> PathBuf {
+    home.join("wallets").join(format!("{name}.lock"))
 }
 fn anchor_path(home: &Path) -> PathBuf {
     home.join("anchor.json")
@@ -475,7 +479,7 @@ fn save_wallet(home: &Path, name: &str, seed: &WalletSeed, store: &Store, log: &
 /// write must stop the publish rather than take the process down after it: the
 /// spend is signed by then, and the only safe states are "logged and published"
 /// or "logged and not published". "Published but not logged" is the one that
-/// discloses a one-time key on retry.
+/// can make a retry reuse a one-time key for a different payload.
 fn try_save_wallet(
     home: &Path,
     name: &str,
@@ -510,12 +514,8 @@ fn try_save_wallet(
             bytes.extend_from_slice(&plain);
         }
     }
-    std::fs::write(&p, bytes).map_err(|e| format!("write wallet {}: {e}", p.display()))?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let _ = std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o600));
-    }
+    durable::atomic_write(&p, &bytes)
+        .map_err(|e| format!("write durable wallet {}: {e}", p.display()))?;
     Ok(())
 }
 
@@ -564,30 +564,50 @@ fn main() {
     let cli = Cli::parse();
     std::fs::create_dir_all(&cli.home).expect("mkdir home");
     match cli.cmd {
-        Cmd::Issue { wallet, amount } => cmd_issue(&cli.home, &cli.backend, &wallet, amount),
+        Cmd::Issue { wallet, amount } => {
+            let _lock = durable::ExclusiveLock::acquire(&wallet_lock_path(&cli.home, &wallet))
+                .expect("lock wallet");
+            cmd_issue(&cli.home, &cli.backend, &wallet, amount)
+        }
         Cmd::Address {
             wallet,
             slots,
             out,
             peer,
-        } => cmd_address(&cli.home, &wallet, slots, out, peer.as_deref()),
+        } => {
+            let _lock = durable::ExclusiveLock::acquire(&wallet_lock_path(&cli.home, &wallet))
+                .expect("lock wallet");
+            cmd_address(&cli.home, &wallet, slots, out, peer.as_deref())
+        }
         Cmd::Send {
             wallet,
             to,
             amount,
             from,
-        } => cmd_send(
-            &cli.home,
-            &cli.backend,
-            &cli.transport,
-            &wallet,
-            &to,
-            amount,
-            from.as_deref(),
-        ),
-        Cmd::Scan { wallet } => cmd_scan(&cli.home, &cli.backend, &cli.transport, &wallet),
+        } => {
+            let _lock = durable::ExclusiveLock::acquire(&wallet_lock_path(&cli.home, &wallet))
+                .expect("lock wallet");
+            cmd_send(
+                &cli.home,
+                &cli.backend,
+                &cli.transport,
+                &wallet,
+                &to,
+                amount,
+                from.as_deref(),
+            )
+        }
+        Cmd::Scan { wallet } => {
+            let _lock = durable::ExclusiveLock::acquire(&wallet_lock_path(&cli.home, &wallet))
+                .expect("lock wallet");
+            cmd_scan(&cli.home, &cli.backend, &cli.transport, &wallet)
+        }
         Cmd::Balance { wallet } => cmd_balance(&cli.home, &wallet),
-        Cmd::Reconcile { wallet } => cmd_reconcile(&cli.home, &cli.backend, &wallet),
+        Cmd::Reconcile { wallet } => {
+            let _lock = durable::ExclusiveLock::acquire(&wallet_lock_path(&cli.home, &wallet))
+                .expect("lock wallet");
+            cmd_reconcile(&cli.home, &cli.backend, &wallet)
+        }
         Cmd::Status { wallet } => cmd_status(&cli.home, &cli.backend, &wallet),
         Cmd::Anchor { what } => match what {
             AnchorCmd::Export { out } => cmd_anchor_export(&cli.home, out),
@@ -870,11 +890,18 @@ fn cmd_send(
     // stable across Rust releases, and `rust-toolchain.toml` floats on
     // `stable` — so a routine `rustup update` would rename every
     // `used-slots-*.json`, every slot would read as unused, and two notes
-    // would end up under one WOTS+ one-time key. That is key disclosure
-    // triggered by a toolchain bump, with nothing to see. Pinned by
+    // would end up under one WOTS+ one-time key. That is an unannounced
+    // violation of the scheme's security contract triggered by a toolchain
+    // bump. Pinned by
     // `the_reservation_filename_is_stable_forever`.
     let addr_id = address_id(&address.scan);
     let used_path = home.join(format!("used-slots-{addr_id}.json"));
+    // This reservation is a second one-time-key boundary. The wallet lock
+    // serializes one sender's state, while this address-specific lock also
+    // serializes two wallets in the same home paying the same address.
+    let reservation_lock =
+        durable::ExclusiveLock::acquire(&home.join(format!("used-slots-{addr_id}.lock")))
+            .expect("lock address reservations");
     // Absent means "nothing reserved yet". Unreadable means the file that
     // stops a slot being used twice is broken, and a slot used twice hands two
     // notes the same one-time key. This used to collapse both into an empty
@@ -886,7 +913,7 @@ fn cmd_send(
             eprintln!("cannot read {}: {e}", used_path.display());
             eprintln!(
                 "this file records which address slots are already spent; \
-                       continuing could reuse one and disclose a signing key"
+                       continuing could reuse a one-time key for another payload"
             );
             std::process::exit(1);
         }
@@ -1020,8 +1047,10 @@ fn cmd_send(
         for sl in &slots {
             used.push(sl.index);
         }
-        std::fs::write(&used_path, serde_json::to_vec(&used).unwrap()).expect("reserve slots");
+        durable::atomic_write(&used_path, &serde_json::to_vec(&used).unwrap())
+            .expect("durably reserve slots");
     }
+    drop(reservation_lock);
 
     if plan.len() > 1 {
         let parts: Vec<String> = plan.iter().map(|(_, v)| v.0.to_string()).collect();
@@ -1072,7 +1101,7 @@ fn cmd_send(
         // below, which is the ordering the split exists to make unskippable:
         // a signature that reaches Bitcoin before it reaches disk is a
         // signature a crashed wallet will make again with a different slot,
-        // and that discloses the one-time key.
+        // leaving WOTS+'s one-time security regime.
         let prepared = prepare(
             &cfg,
             WalletCtx {
@@ -1643,7 +1672,7 @@ mod reservation_key {
     /// This names the file that records which of a payee's one-time slots a
     /// payer has already used. If the derivation ever moves, every existing
     /// reservation becomes invisible, the payer re-uses slot 0, and two notes
-    /// end up under one WOTS+ key — which is key disclosure, arriving silently.
+    /// end up under one WOTS+ key — an unsafe reuse arriving silently.
     ///
     /// It was `DefaultHasher`, whose output is explicitly not stable across
     /// Rust releases, while `rust-toolchain.toml` floats on `stable`. So a

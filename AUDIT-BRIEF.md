@@ -199,11 +199,12 @@ Each of these should be impossible. We believe it is. That belief is the thing u
 - **Differential testing** of every circuit against the host reference implementation, and
   of witness generation against the same `absorb_states` function the host hash is defined
   on — so circuit and hash cannot drift apart silently.
-- **Six formal models** (`formal/`, Quint + Apalache) covering supply conservation (proven
-  at *all* depths by an inductive invariant, not merely to a search bound), reorgs,
-  off-circuit linkage, one-time key discipline, the channel dispute machine, and base-rail
-  liveness. `formal/README.md` records what each assumes, what the adversary controls, and
-  eight modelling and tooling traps that produced confident-looking wrong answers.
+- **Eight formal models** (`formal/`, Quint + Apalache) covering ancestry conservation,
+  reorg policy, persistent indexing, off-circuit linkage, one-time key discipline, wallet
+  persistence/concurrency, the channel dispute machine, and base-rail viability. The
+  multihop strengthening is inductive for every transition length in its fixed five-note
+  universe; the other positive results are bounded checks. `formal/ASSURANCE.md` records
+  those evidence classes, assumptions, and Rust bridges explicitly.
 - **An end-to-end demo in CI** that self-checks its own claims, plus real payments settled
   on Bitcoin signet.
 

@@ -132,8 +132,8 @@ module chainmodel {
   action step = any { mine, reorg, accept }
 }
 
-// What ships today for small payments: 1 confirmation, no rollback, against
-// reorgs up to 2 blocks.
+// The withdrawn policy: 1 confirmation and no rollback, against reorgs up to
+// 2 blocks. Kept as the negative control that justifies today's floor of 3.
 module shallow {
   import chainmodel(REQUIRED = 1, MAX_REORG = 2, RECONCILE = false).*
 }
