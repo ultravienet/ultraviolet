@@ -1,0 +1,25 @@
+// !$*UTF8*$!
+{
+ archiveVersion = 1; classes = {}; objectVersion = 54;
+ objects = {
+  000000000000000000000009 = {isa = PBXBuildFile; fileRef = 000000000000000000000008; };
+  000000000000000000000011 = {isa = PBXBuildFile; fileRef = 000000000000000000000010; };
+  000000000000000000000008 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+  000000000000000000000010 = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libuv_iosffi.a; path = libuv_iosffi.a; sourceTree = "<group>"; };
+  000000000000000000000005 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UVProbe.app; sourceTree = BUILT_PRODUCTS_DIR; };
+  000000000000000000000003 = {isa = PBXGroup; children = (000000000000000000000012, 000000000000000000000010, 000000000000000000000004, ); sourceTree = "<group>"; };
+  000000000000000000000012 = {isa = PBXGroup; children = (000000000000000000000008, ); path = UVProbe; sourceTree = "<group>"; };
+  000000000000000000000004 = {isa = PBXGroup; children = (000000000000000000000005, ); name = Products; sourceTree = "<group>"; };
+  000000000000000000000002 = {isa = PBXNativeTarget; buildConfigurationList = 00000000000000000000000B; buildPhases = (000000000000000000000006, 000000000000000000000007, ); dependencies = (); name = UVProbe; productName = UVProbe; productReference = 000000000000000000000005; productType = "com.apple.product-type.application"; };
+  000000000000000000000001 = {isa = PBXProject; attributes = { BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; TargetAttributes = { 000000000000000000000002 = { CreatedOnToolsVersion = 15.0; }; }; }; buildConfigurationList = 00000000000000000000000A; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base, ); mainGroup = 000000000000000000000003; productRefGroup = 000000000000000000000004; projectDirPath = ""; projectRoot = ""; targets = (000000000000000000000002, ); };
+  000000000000000000000006 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (000000000000000000000009, ); runOnlyForDeploymentPostprocessing = 0; };
+  000000000000000000000007 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (000000000000000000000011, ); runOnlyForDeploymentPostprocessing = 0; };
+  00000000000000000000000C = {isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_OBJC_ARC = YES; IPHONEOS_DEPLOYMENT_TARGET = 15.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; ONLY_ACTIVE_ARCH = YES; }; name = Debug; };
+  00000000000000000000000D = {isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_OBJC_ARC = YES; IPHONEOS_DEPLOYMENT_TARGET = 15.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; SWIFT_OPTIMIZATION_LEVEL = "-O"; }; name = Release; };
+  00000000000000000000000E = {isa = XCBuildConfiguration; buildSettings = { CODE_SIGN_STYLE = Automatic; PRODUCT_BUNDLE_IDENTIFIER = "net.ultravie.uvprobe"; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_KEY_UILaunchScreen_Generation = YES; LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)"; GENERATE_INFOPLIST_FILE = YES; }; name = Debug; };
+  00000000000000000000000F = {isa = XCBuildConfiguration; buildSettings = { CODE_SIGN_STYLE = Automatic; PRODUCT_BUNDLE_IDENTIFIER = "net.ultravie.uvprobe"; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_KEY_UILaunchScreen_Generation = YES; LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)"; GENERATE_INFOPLIST_FILE = YES; }; name = Release; };
+  00000000000000000000000A = {isa = XCConfigurationList; buildConfigurations = (00000000000000000000000C, 00000000000000000000000D, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+  00000000000000000000000B = {isa = XCConfigurationList; buildConfigurations = (00000000000000000000000E, 00000000000000000000000F, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+ };
+ rootObject = 000000000000000000000001;
+}

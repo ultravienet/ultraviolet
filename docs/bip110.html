@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ultraviolet &amp; BIP-110 — already compliant</title>
+<style>
+  :root {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+    --display: "Futura", "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif;
+    --body: "Charter", "Iowan Old Style", "Georgia", serif;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0714;
+      --surface: #140E22;
+      --surface2: #1C1430;
+      --ink: #E9E4F4;
+      --muted: #9C93B8;
+      --uv: #9D6BFF;
+      --uv-soft: rgba(157, 107, 255, 0.14);
+      --line: #2A2140;
+      --fiber-a: #60A5FA;
+      --fiber-b: #34D399;
+      --fiber-c: #FBBF24;
+      --fiber-opacity: 0.6;
+      --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B0714;
+    --surface: #140E22;
+    --surface2: #1C1430;
+    --ink: #E9E4F4;
+    --muted: #9C93B8;
+    --uv: #9D6BFF;
+    --uv-soft: rgba(157, 107, 255, 0.14);
+    --line: #2A2140;
+    --fiber-a: #60A5FA;
+    --fiber-b: #34D399;
+    --fiber-c: #FBBF24;
+    --fiber-opacity: 0.6;
+    --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+  main { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
+  section { margin-top: 4.5rem; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h2 { font-size: 1.7rem; margin-bottom: 1rem; }
+  h3 { font-size: 1.15rem; }
+  p { max-width: 46rem; }
+  a { color: var(--uv); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--uv); margin: 0 0 0.75rem;
+  }
+  .muted { color: var(--muted); }
+
+  /* ---- Hero ---- */
+  header {
+    position: relative; overflow: hidden;
+    padding: 5.5rem 1.5rem 3.5rem; text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .fibers { position: absolute; inset: 0; pointer-events: none; }
+  .fiber { position: absolute; width: 26px; height: 2px; border-radius: 2px; opacity: var(--fiber-opacity, 0.3); }
+  h1.wordmark {
+    font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 600; color: var(--uv); text-shadow: var(--glow);
+  }
+  .tagline { font-size: 1.2rem; font-style: italic; color: var(--muted); margin: 1rem auto 0; }
+  .sub { margin: 1.25rem auto 0; max-width: 44rem; }
+
+  /* ---- Spectrum strip ---- */
+  .spectrum { max-width: 56rem; margin: 3rem auto 0; }
+  .strip {
+    height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg,
+      #2a0a0a 0%, #7f1d1d 14%, #dc2626 30%, #ca8a04 41%,
+      #16a34a 50%, #0891b2 61%, #2563eb 70%, #7c3aed 82%,
+      var(--uv) 88%, var(--bg) 100%);
+  }
+  .strip-labels {
+    display: flex; font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.12em; color: var(--muted); margin-top: 0.5rem;
+  }
+  .strip-labels .visible { flex: 0 0 80%; display: flex; justify-content: space-around; }
+  .strip-labels .beyond { flex: 1; text-align: right; color: var(--uv); font-weight: 700; }
+  .you-are-here {
+    position: relative; height: 0; max-width: 56rem; margin: 0 auto;
+  }
+  .marker {
+    position: absolute; right: 4%; top: -26px; width: 4px; height: 24px;
+    background: var(--uv); border-radius: 2px; box-shadow: var(--glow);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .marker { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.45; } }
+  }
+
+  /* ---- Three properties ---- */
+  .props { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+  .prop {
+    background: var(--surface); border: 1px solid var(--line);
+    border-top: 3px solid var(--uv); padding: 1.5rem;
+  }
+  .prop h3 { margin-bottom: 0.6rem; }
+  .prop p { font-size: 0.97rem; margin: 0; }
+  .prop .num { font-family: var(--mono); color: var(--uv); font-size: 0.75rem; letter-spacing: 0.15em; display: block; margin-bottom: 0.9rem; }
+
+  /* ---- Architecture ---- */
+  .arch { display: grid; gap: 0.75rem; max-width: 46rem; }
+  .layer {
+    display: grid; grid-template-columns: 11rem 1fr; gap: 1rem;
+    background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem;
+    align-items: baseline;
+  }
+  .layer b { font-family: var(--display); font-size: 0.95rem; }
+  .layer span { font-size: 0.95rem; color: var(--muted); }
+  .layer.chain { border-left: 3px solid var(--uv); }
+  @media (max-width: 40rem) {
+    .layer { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+  .arrow { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-size: 0.85rem; background: var(--surface2); white-space: nowrap; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .yes { color: var(--uv); font-weight: 700; }
+  .no { color: var(--muted); }
+  td, th { font-variant-numeric: tabular-nums; }
+
+  /* ---- Callout ---- */
+  .callout {
+    background: var(--uv-soft); border: 1px solid var(--uv);
+    padding: 1.5rem 1.75rem; max-width: 48rem;
+  }
+  .callout p { margin: 0.4rem 0 0; }
+  .callout h3 { color: var(--uv); }
+
+  /* ---- Lists ---- */
+  ul.tight { max-width: 46rem; padding-left: 1.2rem; }
+  ul.tight li { margin-bottom: 0.55rem; }
+
+  footer {
+    margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+  }
+
+  .sitenav {
+    margin-top: 2.25rem; font-family: var(--mono); font-size: 0.75rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .sitenav a { color: var(--uv); text-decoration: none; margin: 0 0.9rem; }
+  .sitenav a:hover { text-decoration: underline; }
+  .sitenav span { color: var(--muted); }
+</style>
+</head>
+<body>
+<header style="padding: 3.5rem 1.5rem 2.5rem;">
+  <p class="eyebrow"><a href="index.html">← Ultraviolet</a> · BIP-110</p>
+  <h1 class="wordmark" style="font-size: clamp(1.8rem, 5vw, 3rem);">Ultraviolet &amp; BIP-110</h1>
+  <p class="tagline">If Bitcoin clamps down on chain data, we're already the clean case.</p>
+</header>
+
+<main>
+
+<section>
+  <p class="eyebrow">The short version</p>
+  <h2>We pass all of it, today</h2>
+  <p>BIP-110 is a proposed one-year Bitcoin soft fork that restricts non-financial data in
+  transactions. It is aimed at inscription and Ordinals bloat. It caps most new outputs at 34
+  bytes, OP_RETURN at 83 bytes, and data pushes at 256 bytes. (OP_RETURN is Bitcoin's data-only
+  output, the one place a transaction can carry a small payload.)
+  <strong>Ultraviolet complies with every one of its rules right now</strong>, with room to spare.
+  Our on-chain data is minimal, monetary, and prunable, meaning a node can discard it once the
+  block is validated. That is exactly what BIP-110 is trying to protect, not the bloat it
+  targets.</p>
+  <p class="muted">Status, late July 2026: BIP-110 is signaling around 1% of hashrate. No major
+  pool supports it, and Saylor, Back, and Lopp oppose it. It is unlikely to activate. We take no
+  side in that governance fight. This page just shows we're fine either way.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Rule by rule</p>
+  <h2>BIP-110 vs. one Ultraviolet payment</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>BIP-110 rule</th><th>An Ultraviolet payment</th><th></th></tr>
+    <tr><td>OP_RETURN ≤ 83 bytes</td><td>64 bytes of data, which is a 66-byte scriptPubKey. The 83-byte cap is a script-length convention, so script is the unit that counts.</td><td class="yes">✓ 17 to spare</td></tr>
+    <tr><td>New outputs ≤ 34 bytes</td><td>Only a normal change output (standard address, ≤ 34 B); no data outputs</td><td class="yes">✓</td></tr>
+    <tr><td>Data pushes ≤ 256 bytes</td><td>One 64-byte push</td><td class="yes">✓</td></tr>
+    <tr><td>No arbitrary Taproot-witness data</td><td>Nothing in the witness; ownership is off-chain</td><td class="yes">✓</td></tr>
+    <tr><td>(the spirit) keep the chain lean</td><td>OP_RETURN only — prunable, zero UTXO-set growth</td><td class="yes">✓</td></tr>
+  </table>
+  </div>
+  <p class="muted" style="margin-top:1rem">Our entire on-chain footprint per payment is one 64-byte
+  record: <code>nf ‖ H(bundle)</code>. That is a spend marker, called a nullifier, followed by a
+  hash of the payment data. No JPEGs, no text, no tokens stuffed into fake addresses. Just the one
+  thing Bitcoin is uniquely good at: deciding what came first.</p>
+</section>
+
+<section>
+  <div class="callout">
+    <h3>The good-citizen argument</h3>
+    <p>OP_RETURN outputs are provably unspendable, so they <em>never enter the UTXO set</em>. The
+    UTXO set is the one dataset every full node must hold in fast storage forever, and it is the
+    cost BIP-110 is actually about. Millions of Ultraviolet transfers add <strong>zero</strong> to
+    it. Archival nodes still keep the record transactions in block history, like any other
+    transaction; the claim is zero UTXO-set growth, not zero bytes anywhere. Being precise about
+    block space: an un-batched record transaction measured 186 vB on signet, published by the
+    <a href="journal.html">current stack</a>. A vbyte is Bitcoin's fee-weighting unit, and 186 of
+    them is roughly an ordinary payment. An earlier version of this page claimed ~10× density,
+    which was wrong. The 64-byte payload is non-witness data, so it weighs ×4, and the transaction
+    still needs an input and change. Batching is where density would come from: one 32-byte root
+    covering many payments. It is designed, not yet built (spec/99 [BATCH-AVAIL]). If BIP-110's goal is
+    lighter nodes and less junk, Ultraviolet is on its side. Our data is monetary, block-prunable,
+    and never bloats the UTXO set.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Even if it went stricter</p>
+  <h2>The 32-byte fallback</h2>
+  <p>Suppose a future filter went <em>below</em> 64 bytes, even down to BIP-110's 34-byte cap
+  applied to OP_RETURN. Ultraviolet still fits. <strong>Batched publication</strong> (the designed
+  mode, spec/99 [BATCH-AVAIL]) collapses many payment records into a single <strong>32-byte Merkle
+  root</strong>, posted once. Measure it the same way as the 64-byte case above, as a scriptPubKey,
+  and a 32-byte push is exactly 34 bytes of script. That is at the cap, not under it, and it puts a
+  whole block's worth of transfers in one stamp. The protocol degrades gracefully instead of
+  breaking. The design never assumed a generous data limit.</p>
+  <p class="muted">The one thing actually worth watching is a future <em>semantic</em> filter: one
+  that bans data by what it means, not by its size. BIP-110 is a size limit, so it can't tell a
+  spend marker from any other 64 bytes. A content filter would be a different and much harder
+  conversation for Bitcoin to have without breaking its own neutrality.</p>
+</section>
+
+<footer>
+  ULTRAVIOLET · BIP-110 note · July 2026 · <a href="index.html">main page</a> · <a href="benchmarks.html">benchmarks</a> ·
+  <a href="journal.html">journal</a> ·
+  spec: <a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/03-RECORDS.md">03-RECORDS</a> ·
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/99-OPEN-PROBLEMS.md">99 (watch items)</a> ·
+  sources: bip110.org/monitor · CoinDesk · TFTC (Saylor) · Simple Mining
+</footer>
+
+</main>
+
+</body>
+</html>

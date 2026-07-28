@@ -1,0 +1,23 @@
+[package]
+name = "uv-envelope"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Hybrid ML-KEM-768 + X25519 sealing for Ultraviolet addresses and payment bundles."
+
+# Off the money path, deliberately and by construction. A break here leaks
+# *who paid whom what* to someone who already intercepted the message; it can
+# never move a coin, because nothing the envelope carries authorizes a spend
+# (spec/01). That is why lattice cryptography is allowed at all — the locked
+# rule is hashes only where money is at stake.
+[dependencies]
+ml-kem = "0.3"
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+hkdf = "0.12"
+sha2 = "0.10"
+chacha20poly1305 = "0.10"
+serde = { version = "1", features = ["derive"] }
+hex = "0.4"
+
+[dev-dependencies]
+serde_json = "1"

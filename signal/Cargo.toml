@@ -1,0 +1,29 @@
+[package]
+name = "uv-signal"
+version = "0.1.0"
+edition = "2021"
+# MIT, like the rest of the workspace — but read the next sentence before
+# shipping anything built from this crate. It links Signal's `libsignal`, which
+# is AGPL-3.0, and our declaring MIT does not change somebody else's licence.
+# Anyone who *distributes* a binary built from this crate, or runs one as a
+# network service, inherits AGPL obligations regardless of what this file says.
+# Nothing here is released, so nothing bites today. The MIT declaration covers
+# the code in this directory; it cannot cover what that code links.
+license = "MIT"
+description = "Carrying Ultraviolet payments over the real Signal Protocol."
+
+[dependencies]
+uv-envelope = { path = "../envelope" }
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.99.1" }
+rand = { version = "0.9", features = ["std", "std_rng", "os_rng"] }
+tokio = { version = "1", features = ["rt", "macros", "io-util", "net", "sync", "time"] }
+bincode = "1"
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+uv-air = { path = "../air" }
+uv-kernel2 = { path = "../kernel2" }
+uv-wallet2 = { path = "../wallet2" }
+p3-field = "0.4.3"
+tokio = { version = "1", features = ["rt", "macros"] }
+miniz_oxide = "0.8"
