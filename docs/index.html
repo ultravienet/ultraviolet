@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ultraviolet — Quantum-Safe Assets on Bitcoin</title>
+<style>
+  :root {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+    --display: "Futura", "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif;
+    --body: "Charter", "Iowan Old Style", "Georgia", serif;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0714;
+      --surface: #140E22;
+      --surface2: #1C1430;
+      --ink: #E9E4F4;
+      --muted: #9C93B8;
+      --uv: #9D6BFF;
+      --uv-soft: rgba(157, 107, 255, 0.14);
+      --line: #2A2140;
+      --fiber-a: #60A5FA;
+      --fiber-b: #34D399;
+      --fiber-c: #FBBF24;
+      --fiber-opacity: 0.6;
+      --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B0714;
+    --surface: #140E22;
+    --surface2: #1C1430;
+    --ink: #E9E4F4;
+    --muted: #9C93B8;
+    --uv: #9D6BFF;
+    --uv-soft: rgba(157, 107, 255, 0.14);
+    --line: #2A2140;
+    --fiber-a: #60A5FA;
+    --fiber-b: #34D399;
+    --fiber-c: #FBBF24;
+    --fiber-opacity: 0.6;
+    --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+  main { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
+  section { margin-top: 4.5rem; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h2 { font-size: 1.7rem; margin-bottom: 1rem; }
+  h3 { font-size: 1.15rem; }
+  p { max-width: 46rem; }
+  a { color: var(--uv); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--uv); margin: 0 0 0.75rem;
+  }
+  .muted { color: var(--muted); }
+
+  /* ---- Hero ---- */
+  header {
+    position: relative; overflow: hidden;
+    padding: 5.5rem 1.5rem 3.5rem; text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .fibers { position: absolute; inset: 0; pointer-events: none; }
+  .fiber { position: absolute; width: 26px; height: 2px; border-radius: 2px; opacity: var(--fiber-opacity, 0.3); }
+  h1.wordmark {
+    font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 600; color: var(--uv); text-shadow: var(--glow);
+  }
+  .tagline { font-size: 1.2rem; font-style: italic; color: var(--muted); margin: 1rem auto 0; }
+  .sub { margin: 1.25rem auto 0; max-width: 44rem; }
+
+  /* ---- Spectrum strip ---- */
+  .spectrum { max-width: 56rem; margin: 3rem auto 0; }
+  .strip {
+    height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg,
+      #2a0a0a 0%, #7f1d1d 14%, #dc2626 30%, #ca8a04 41%,
+      #16a34a 50%, #0891b2 61%, #2563eb 70%, #7c3aed 82%,
+      var(--uv) 88%, var(--bg) 100%);
+  }
+  .strip-labels {
+    display: flex; font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.12em; color: var(--muted); margin-top: 0.5rem;
+  }
+  .strip-labels .visible { flex: 0 0 80%; display: flex; justify-content: space-around; }
+  .strip-labels .beyond { flex: 1; text-align: right; color: var(--uv); font-weight: 700; }
+  .you-are-here {
+    position: relative; height: 0; max-width: 56rem; margin: 0 auto;
+  }
+  .marker {
+    position: absolute; right: 4%; top: -26px; width: 4px; height: 24px;
+    background: var(--uv); border-radius: 2px; box-shadow: var(--glow);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .marker { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.45; } }
+  }
+
+  /* ---- Three properties ---- */
+  .props { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+  .prop {
+    background: var(--surface); border: 1px solid var(--line);
+    border-top: 3px solid var(--uv); padding: 1.5rem;
+  }
+  .prop h3 { margin-bottom: 0.6rem; }
+  .prop p { font-size: 0.97rem; margin: 0; }
+  .prop .num { font-family: var(--mono); color: var(--uv); font-size: 0.75rem; letter-spacing: 0.15em; display: block; margin-bottom: 0.9rem; }
+
+  /* ---- Architecture ---- */
+  .arch { display: grid; gap: 0.75rem; max-width: 46rem; }
+  .layer {
+    display: grid; grid-template-columns: 11rem 1fr; gap: 1rem;
+    background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem;
+    align-items: baseline;
+  }
+  .layer b { font-family: var(--display); font-size: 0.95rem; }
+  .layer span { font-size: 0.95rem; color: var(--muted); }
+  .layer.chain { border-left: 3px solid var(--uv); }
+  @media (max-width: 40rem) {
+    .layer { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+  .arrow { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-size: 0.85rem; background: var(--surface2); white-space: nowrap; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .yes { color: var(--uv); font-weight: 700; }
+  .no { color: var(--muted); }
+  td, th { font-variant-numeric: tabular-nums; }
+
+  /* ---- Callout ---- */
+  .callout {
+    background: var(--uv-soft); border: 1px solid var(--uv);
+    padding: 1.5rem 1.75rem; max-width: 48rem;
+  }
+  .callout p { margin: 0.4rem 0 0; }
+  .callout h3 { color: var(--uv); }
+
+  /* ---- Lists ---- */
+  ul.tight { max-width: 46rem; padding-left: 1.2rem; }
+  ul.tight li { margin-bottom: 0.55rem; }
+
+  footer {
+    margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+  }
+
+  .sitenav {
+    margin-top: 2.25rem; font-family: var(--mono); font-size: 0.75rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .sitenav a { color: var(--uv); text-decoration: none; margin: 0 0.9rem; }
+  .sitenav a:hover { text-decoration: underline; }
+  .sitenav span { color: var(--muted); }
+
+  /* ---- FAQ accordions ---- */
+  .faq { display: grid; gap: 0.75rem; max-width: 52rem; }
+  .faq details {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--uv); padding: 0 1.25rem;
+  }
+  .faq summary {
+    font-family: var(--display); font-size: 1.04rem; font-weight: 600;
+    padding: 1rem 0; cursor: pointer; list-style: none; display: flex;
+    justify-content: space-between; gap: 1rem; align-items: baseline;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after {
+    content: "+"; color: var(--uv); font-family: var(--mono); flex: 0 0 auto;
+  }
+  .faq details[open] summary { border-bottom: 1px solid var(--line); }
+  .faq details[open] summary::after { content: "\2212"; }
+  .faq summary:focus-visible { outline: 2px solid var(--uv); outline-offset: 3px; }
+  .faq .answer { padding: 1rem 0 1.25rem; }
+  .faq .answer > :first-child { margin-top: 0; }
+  .faq .answer p { font-size: 0.99rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="fibers" id="fibers" aria-hidden="true"></div>
+  <p class="eyebrow">Open protocol · no token · working core · July 2026</p>
+  <h1 class="wordmark">Ultraviolet</h1>
+  <p class="tagline">Assets on Bitcoin you actually hold.</p>
+  <p class="sub">A design for issuing and sending assets on <strong>Bitcoin</strong> — dollars,
+  stablecoins, tokens — while you hold your own keys. The goal: nobody can freeze, forge, or
+  double-spend your coins. The whole design rests on hash functions alone. So unlike everything else
+  on Bitcoin today, <strong>a quantum computer gets no new way to steal them</strong>. No new coin.
+  No soft fork. Just 64 bytes on-chain per payment.</p>
+
+  <div class="spectrum">
+    <div class="strip"></div>
+    <div class="you-are-here"><div class="marker"></div></div>
+    <div class="strip-labels">
+      <div class="visible"><span>· · ·</span><span>R</span><span>G</span><span>B</span></div>
+      <div class="beyond">UV — YOU ARE HERE</div>
+    </div>
+  </div>
+  <p class="muted" style="max-width:40rem;margin:0.9rem auto 0;font-size:0.9rem">RGB and Taproot
+  Assets put assets on Bitcoin today. Ultraviolet is the next band over — the post-quantum one.</p>
+
+  <nav class="sitenav">
+    <a href="https://github.com/ultravienet/ultraviolet">GitHub</a><span>·</span><a href="https://github.com/ultravienet/ultraviolet/tree/main/spec">The spec</a><span>·</span><a href="#faq">FAQ</a><span>·</span><a href="journal.html">Journal</a><span>·</span><a href="benchmarks.html">Benchmarks</a>
+  </nav>
+</header>
+
+<main>
+
+<section style="margin-top:2.5rem">
+  <div class="callout">
+    <h3>Read this first: research project, not money</h3>
+    <p><strong>Do not put value on this.</strong> It is a protocol design plus a working core, and
+    the proof circuit is hand-written and has never been professionally audited. Volunteer
+    adversarial review has twice found ways to create money from nothing. Both are fixed; the
+    standing assumption is that more remain.</p>
+    <p><strong><a href="journal.html">The full history — every gap found, who found it, and what
+    it cost — is in the journal.</a></strong> A project asking you to trust its arithmetic owes you
+    its failures more than its successes, so they are written up there without varnish.</p>
+    <p class="muted">Track it: <a href="https://github.com/ultravienet/ultraviolet/issues/13">audit
+    issue #13</a> · <a href="https://github.com/ultravienet/ultraviolet/blob/main/SPEC.md">open
+    problems</a>.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Straight answers</p>
+  <h2>The questions you're already asking</h2>
+  <div class="props">
+    <div class="prop">
+      <span class="num">NO TOKEN</span>
+      <h3>Is there a coin to buy?</h3>
+      <p><strong>Not from us.</strong> There is no Ultraviolet token, no premine, no ICO, no VC
+      bag, and nothing we hold that you could buy. Ultraviolet is a protocol, like Lightning.</p>
+      <p>But it would be slippery to stop there, because <strong>issuing assets is what it is
+      for</strong>. Anyone can create one, and those are real coins — somebody else's. What the
+      protocol gives you is the ability to <a href="#faq">count them from Bitcoin</a> rather than
+      take the issuer's word, and the ability to refuse any coin whose creation was never
+      published. It does not make an issuer trustworthy. Read the chain.</p>
+      <p><strong>Fees are paid in bitcoin, and only in bitcoin.</strong> There is no second asset
+      you must hold to use the protocol — no gas token. Sending and issuing each publish one
+      ordinary Bitcoin transaction and pay its ordinary fee. <strong>Everything else is
+      free</strong>, including the two people usually assume are not: receiving a payment, and
+      proving one. Proving happens on your own device in about two tenths of a second.</p>
+      <p><code>uv fees</code> prints the whole schedule at your node's current rate, with the
+      free operations listed rather than omitted — a payment is about 190 vbytes and an issuance
+      about 13 more, which is exactly its extra data. Those sizes are measured against a real
+      node on every CI run, not typed into this page.</p>
+    </div>
+    <div class="prop">
+      <span class="num">NO TRUST</span>
+      <h3>Do I have to trust anyone?</h3>
+      <p>Not for the money itself. One job needs a referee: deciding which spend came first. Bitcoin
+      does that job, and your own wallet checks everything else for itself. One honest hedge:
+      deciding which came first takes a view of the chain. A phone that asks someone else's server
+      for that view is trusting the server to be complete, and is leaking which coins it holds. Run
+      it against your own node and the answer is genuinely no.</p>
+    </div>
+    <div class="prop">
+      <span class="num">COUNTABLE</span>
+      <h3>How do I know how many coins exist?</h3>
+      <p>You add them up from Bitcoin. Creating coins costs a confirmed Bitcoin transaction — a
+      small mark naming the asset and the amount in the open — and <code>uv supply --asset X</code>
+      reads them back and sums them. Nobody is asked; the issuer is not asked. Coins whose creation
+      was never published are refused by every wallet, so an issuer cannot quietly mint on the
+      side, and the total you get is the total that exists.</p>
+      <p>The honest limit, and it is smaller than it was: nothing stops a stranger publishing a
+      mark that names <em>your</em> asset. It creates no spendable coin — they would need a secret
+      only the real owner has — but it does sit there bearing the name. So the tool counts records
+      it can vouch for separately from ones it cannot, and never adds the two together.</p>
+    </div>
+    <div class="prop">
+      <span class="num">NO FORK</span>
+      <h3>Does it change Bitcoin?</h3>
+      <p>No soft fork, no new opcodes, no covenants. Each payment leaves one 64-byte record in an
+      OP_RETURN — a small note attached to an ordinary Bitcoin transaction. Bitcoin doesn't need to
+      know it's there.</p>
+    </div>
+    <div class="prop">
+      <span class="num">NO BLOAT</span>
+      <h3>Does it bloat the chain?</h3>
+      <p>Records live in those OP_RETURN notes. Every node can prune them, and they never join the
+      set of unspent coins a node must track. Millions of transfers add <strong>zero</strong> to
+      the state your node keeps forever. Block space is another matter, and we'll be honest: one
+      payment's transaction is about the size of an ordinary payment (~143–186 vbytes, measured). The big
+      savings come from batching many payments into one 32-byte root, a single hash that stands for
+      all of them. Everything fits under OP_RETURN size
+      limits, including the strictest one anyone has proposed.</p>
+    </div>
+    <div class="prop">
+      <span class="num">YOUR KEYS</span>
+      <h3>Is it self-custody?</h3>
+      <p>Yes, for the coin itself. Your keys, on your device. No custodian, no bridge holding your
+      funds, nobody who can freeze the note. Lose the seed, lose the coins, same as Bitcoin.
+      <strong>But</strong>: if the asset stands for something off-chain, like a dollar or a share,
+      the <em>issuer</em> still controls the reserve. They also decide whether they'll redeem for
+      you. We remove the custodian from holding and sending, not the issuer from backing.</p>
+    </div>
+    <div class="prop">
+      <span class="num">Q-DAY SAFE</span>
+      <h3>What about quantum?</h3>
+      <p>The day a quantum computer cracks Bitcoin's signatures, your Ultraviolet assets are still
+      safe. They're locked with hash-based keys, which quantum barely dents. Quantum-<em>safe</em>,
+      not quantum-proof — <a href="#faq">exactly what that means</a>.</p>
+    </div>
+    <div class="prop">
+      <span class="num">IT RUNS</span>
+      <h3>Real, or just a paper?</h3>
+      <p>Real code, and real payments on a real Bitcoin network.
+      <a href="https://mempool.space/signet/tx/e284c5e7834ccf98dec811444432e2edf6e437a00f70733e4aa1a97169b03106">See
+      it on signet</a>: 64 bytes, 374 sats of fee, published by the current stack. Open source
+      (MIT). Honest caveat: research project, no professional audit. Volunteer adversarial
+      review has read the proof circuits — and found a way to forge payments outright, which is
+      fixed and written up in the <a href="journal.html">journal</a>. Do not put value on this.</p>
+    </div>
+    <div class="prop">
+      <span class="num">WHY BOTHER</span>
+      <h3>What's it actually for?</h3>
+      <p>Putting real assets on Bitcoin rails you control: a dollar stablecoin, a tokenized share.
+      No bank, no altcoin chain. Tether already does a version of this. Ultraviolet is designed to
+      make it lighter, private, and quantum-safe.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">The whole thing, in three pieces</p>
+  <h2>Your coins, a stamp, and a receipt</h2>
+  <div class="props">
+    <div class="prop">
+      <span class="num">1 · YOUR COINS</span>
+      <h3>Notes</h3>
+      <p>Your money is a set of private "notes" kept on your own device. Each note holds an amount,
+      an owner, and a secret random value that makes it unguessable. No relay, no chain, no third
+      party ever sees them. Once a coin is yours, spending it reveals nothing new to anyone. (The
+      person who paid you knows the note they built for you. That is the one unavoidable
+      exception.)</p>
+    </div>
+    <div class="prop">
+      <span class="num">2 · THE STAMP</span>
+      <h3>A 64-byte mark on Bitcoin</h3>
+      <p>To spend, your wallet drops a tiny 64-byte stamp on Bitcoin. The first stamp for a given
+      coin wins, and that's what stops double-spends. No Bitcoin output to own, no script to run.
+      You can even receive with an empty Bitcoin wallet.</p>
+    </div>
+    <div class="prop">
+      <span class="num">3 · THE RECEIPT</span>
+      <h3>A proof anyone can check</h3>
+      <p>Each hop in a payment's history carries one compact proof that the hand-off was legit.
+      That's about 117&thinsp;KB per hop, checked in under two milliseconds. No party or amount ever
+      appears in the public record. The proof now hides the amounts and the secrets behind them,
+      which is what <em>zero-knowledge</em> means, so the person you pay can't fish fragments of the
+      sender's secrets out of it. Hidden amounts are the payment format, not an option. Accepting a
+      payment <em>safely</em> also means confirming that each past hop settled on Bitcoin — one
+      quick lookup per hop. A formal model caught us skipping that, and it is now enforced.</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:1.25rem">That's the whole system. Everything below is just detail
+  on how these three pieces move around.</p>
+</section>
+
+<section>
+  <p class="eyebrow">How a payment actually works</p>
+  <h2>Tap send. Done in seconds. Locked by Bitcoin.</h2>
+  <div class="arch">
+    <div class="layer">
+      <b>You tap send</b>
+      <span>your wallet spends a coin, writes the little proof in about a quarter-second, seals the
+      payment to your friend's scan key, and sends it. No invoice, and your friend can be offline.
+      What it does need is that you swapped addresses once, at some point.</span>
+    </div>
+    <div class="arrow">▼ the encrypted payment travels…</div>
+    <div class="layer">
+      <b>…over Signal</b>
+      <span>the carrier we designed for, and on 28 July 2026 a payment crossed it for real:
+      <strong>Signal's own production servers</strong>, between two real accounts, the sealed
+      bundle delivered in under a second and the receiving wallet accepting 300 units recorded on
+      public signet. The carrier saw bytes it cannot read and cannot tell from a photo. This is
+      what it looked like arriving on the recipient's phone:</span>
+      <img src="img/signal-uvb-received.png" alt="The sealed payment bundle as it arrived in the
+      recipient's Signal app: a 214 KB .uvb file attachment" style="max-width:100%;border-radius:8px;margin:0.5rem 0"
+      loading="lazy">
+      <span class="muted">The filename is the payment's spend marker; the 214&thinsp;KB is mostly
+      the zero-knowledge proof. One honest caveat stays: this rode signal-cli as a linked device —
+      the chat app itself doesn't exist yet.</span>
+    </div>
+    <div class="arrow">▼ …and a 64-byte stamp goes to…</div>
+    <div class="layer chain">
+      <b>Bitcoin</b>
+      <span>your wallet posts the 64-byte stamp. First one wins, forever. Your friend sees it reach
+      Bitcoin's queue of pending transactions within seconds. It's locked in for good about a block
+      later.</span>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:1rem">Paying someone you deal with often? The design adds
+  channels: instant back-and-forth that needs no trust between the two of you. No adaptor
+  signatures, no Lightning liquidity headaches. They are designed and formally modelled, not yet
+  built. The full no-Lightning story is <a href="https://github.com/ultravienet/ultraviolet/blob/main/SPEC.md">the payments spec</a>.</p>
+</section>
+
+<section>
+  <div class="callout">
+    <h3>Why this isn't a shitcoin</h3>
+    <p>No token means there's nothing to pump. Ultraviolet is plumbing: a way to put real assets on
+    Bitcoin rails you actually control. It rides on Bitcoin the way Lightning does — using it, not
+    replacing it, not asking permission. One 64-byte OP_RETURN per payment, prunable, and nothing
+    added to the set of unspent coins every node tracks forever. The chain stays lean. You stay
+    sovereign.</p>
+  </div>
+
+  <div style="margin-top:2.5rem">
+    <h3>The wallet app, running</h3>
+    <p>The command-line tool is no longer the only surface. This is a SwiftUI wallet on iOS,
+    built on the same Rust command layer the CLI uses — not a reimplementation, a second front
+    end on one set of rules. These are screenshots of it running, not mockups:</p>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin:1rem 0">
+      <figure style="flex:1 1 15rem;max-width:18rem;margin:0">
+        <img src="img/app-tab0.png" alt="The wallet's Balance screen showing 700 spendable and one
+        unspent note" style="width:100%;border-radius:12px;border:1px solid var(--line)" loading="lazy">
+        <figcaption class="muted" style="font-size:0.85rem;margin-top:0.5rem">Balance. The 700 was
+        issued by the <em>command-line</em> tool into this app's own wallet file — same format,
+        same code, two front ends.</figcaption>
+      </figure>
+      <figure style="flex:1 1 15rem;max-width:18rem;margin:0">
+        <img src="img/app-tab2.png" alt="The wallet's Status screen, whose first line warns that
+        this build is not connected to Bitcoin" style="width:100%;border-radius:12px;border:1px solid var(--line)" loading="lazy">
+        <figcaption class="muted" style="font-size:0.85rem;margin-top:0.5rem">Status — and the
+        first thing it says is what it <em>cannot</em> do. This build reads a local chain file;
+        the network view lands with mirror sync.</figcaption>
+      </figure>
+    </div>
+    <p class="muted">Captured 29 July 2026 from a Release build in the iPhone&nbsp;17&nbsp;Pro
+    simulator. The app carries a self-test that runs a real issuance and a real address through
+    the same door and logs <code>PASS</code>, because a screenshot cannot tell you the thing
+    underneath works. Timings wait for hardware: a simulator runs on the Mac's own chip, so a
+    simulator number is a Mac number.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Show me it runs</p>
+  <h2>It runs, on real Bitcoin</h2>
+  <p>The current stack has settled a full <strong>issuer → Bob → Carol</strong> chain on public
+  signet. Each payment was one 64-byte OP_RETURN, and the receiver checked every hop of the coin's
+  history against the live chain. A double-spend attempt then produced <strong>no transaction at
+  all</strong>, because the wallet replayed its original signed payload instead of signing a second
+  one.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Step</th><th>On public signet</th><th>Result</th></tr>
+    <tr><td>issuer → Bob, 300</td><td><a href="https://mempool.space/signet/tx/e284c5e7834ccf98dec811444432e2edf6e437a00f70733e4aa1a97169b03106"><code>e284c5e7…</code></a></td><td class="yes">Bob verified &amp; accepted</td></tr>
+    <tr><td>Bob → Carol, 100 (two hops)</td><td><a href="https://mempool.space/signet/tx/f8a81f054c834ba509b5c292544d168e2209357653454075548fdd5e82626735"><code>f8a81f05…</code></a></td><td class="yes">Carol validated both hops</td></tr>
+    <tr><td>issuer re-spends a spent note</td><td>no transaction — payload replayed</td><td class="no">refused; key signed once</td></tr>
+  </table>
+  </div>
+  <p class="muted" style="margin-top:1rem">Balances closed at 700 + 200 + 100 = the original
+  1000. Proving took ~0.23 s per hop, so the only waiting was Bitcoin's.
+  <strong><a href="journal.html">The full journal →</a></strong> has every milestone, including
+  the measurements that killed earlier designs and the bugs found along the way.</p>
+</section>
+
+<section id="faq">
+  <p class="eyebrow">More questions</p>
+  <h2>The ones that need a longer answer</h2>
+  <div class="faq">
+
+    <details>
+      <summary>"Quantum-safe" — what does that actually mean here?</summary>
+      <div class="answer">
+        <p>Every asset protocol on Bitcoin today secures ownership with the same elliptic-curve
+        signatures Bitcoin uses. That is true of RGB, Taproot Assets, all of them. A big enough
+        quantum computer breaks those signatures. Ultraviolet doesn't use them for ownership at all.
+        The honest breakdown, part by part:</p>
+        <ul class="tight">
+          <li><strong>Stealing or forging your coins:</strong> safe under assumptions about hash
+          functions alone, the most battle-tested, conservative crypto there is. This is the part
+          that matters most, and it's the strongest.</li>
+          <li><strong>Keeping payments private in transit:</strong> post-quantum encryption paired
+          with today's crypto, so an attacker has to break both. If it ever fell it would leak
+          privacy. It would never let anyone take your funds — nothing an encrypted payment carries
+          can move a coin.</li>
+          <li><strong>We say quantum-safe, never quantum-proof.</strong> It rests on well-studied
+          assumptions, not a mathematical guarantee. And it still needs Bitcoin itself to survive
+          its own quantum upgrade someday.</li>
+        </ul>
+        <p>All of that is a claim about the <em>cryptography</em>, and nothing more. It says
+        nothing about whether the protocol logic around it is correct. For that, see the working
+        code and its open findings below.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Why not just use a zkVM like everyone else?</summary>
+      <div class="answer">
+        <p>We did, for a year. A zkVM lets you write the protocol once in normal code, then run
+        that same code inside a proof. That is a genuinely good deal, and it is how this got built.
+        Then we measured what it costs, and we deleted it. The zkVM is gone from the repository.</p>
+        <p>One payment took <strong>two minutes and 9.7 GB of memory</strong> to prove. We replaced
+        the zkVM with a circuit written by hand for this one job, and then — after a measured
+        decision removed the in-circuit signature too — that circuit shrank again. Today it proves
+        the same hop in <strong>about 0.02 seconds on 5 MB</strong>. That is four orders of
+        magnitude faster on roughly 2,000× less memory. It is not a tuning difference: we tried
+        tuning the zkVM first and it changed nothing, because the memory <em>is</em> the
+        computation.</p>
+        <p>Two things follow. First, 9.7 GB means a phone could never do it. So we ran the
+        hand-written circuit on phones — an iPhone 17 Pro Max and the cheapest iPhone Apple sells —
+        and a full private payment proof took about a third of a second on both, an ordinary thing
+        for an app to do. Those runs used an older, heavier version of the circuit; the current one
+        is an order of magnitude cheaper on the laptop, and the phone numbers are being re-measured
+        on it in the signed app. What matters beyond the speed: your phone never has to hand the
+        payment's secrets to a server to get it proved. The old claim that a phone could never do
+        this belonged to the virtual machine, not to this. Second, the hand-written circuit is
+        genuinely <em>private</em>, which the zkVM proofs never were. We had assumed otherwise until
+        we read its source. Making the proof hide the amounts adds so little — a slightly larger
+        proof, no measurable extra time — that hidden amounts are simply the payment format.</p>
+        <p>The full evidence, including six things we believed and measurement disproved, is on the
+        <a href="benchmarks.html">benchmarks page</a> — with the commands to re-run all of it.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>How does this compare to RGB, Taproot Assets, and the rest?</summary>
+      <div class="answer">
+        <p>They're cousins, not strangers. RGB, Taproot Assets, Shielded CSV and Ultraviolet all
+        keep asset data off-chain and use Bitcoin to stop double-spends. The differences sit in three
+        places: <strong>what owns the coin</strong>, <strong>how much work it is to receive</strong>,
+        and <strong>who gets to see your history</strong>.</p>
+        <div class="tablewrap">
+        <table>
+          <tr><th></th><th>RGB v0.12</th><th>Taproot Assets</th><th>Shielded CSV</th><th>Ultraviolet</th></tr>
+          <tr><td>Ownership</td><td class="no">A Bitcoin UTXO</td><td class="no">A Bitcoin UTXO</td><td class="no">Classic keys</td><td class="yes">Hash-based keys</td></tr>
+          <tr><td>Cost to receive</td><td class="no">Replays whole history</td><td class="no">Proofs grow forever</td><td class="yes">Flat</td><td class="yes">Flat proof + lookup, per hop</td></tr>
+          <tr><td>Need a UTXO to receive?</td><td class="no">Yes</td><td class="no">Yes</td><td class="yes">No</td><td class="yes">No</td></tr>
+          <tr><td>Amounts hidden</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+          <tr><td>Amounts hidden from receiver</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="yes">Yes — the history itself is visible (the receiver validates it); hiding the history too is the accumulator, future work</td></tr>
+          <tr><td>Survives quantum</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+          <tr><td>Shipped &amp; in production</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="no">Paper</td><td class="no">Proof-of-concept</td></tr>
+        </table>
+        </div>
+        <p class="muted">Honest bottom row: they ship today and we don't yet. What we bring is the
+        one part none of them can retrofit: ownership that isn't tied to a Bitcoin key a quantum
+        computer can crack. <a href="compare.html">Full field survey →</a></p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Taproot Assets already has USDT live on Lightning. Why bother?</summary>
+      <div class="answer">
+        <p>Fair question. Taproot Assets is the strongest thing shipping. It's at v0.8.0, USDT has
+        been live on Lightning through it since March 2026, and it has real multi-asset channels
+        today. If you need trustless instant settlement to strangers this quarter, use it.</p>
+        <p>Three things it can't do, by design:</p>
+        <ul class="tight">
+          <li><strong>Its coins live in Bitcoin UTXOs</strong>, the ordinary unspent chunks of
+          bitcoin in a wallet. So ownership is exactly the elliptic-curve key a quantum computer
+          breaks, one UTXO per holder, an on-chain spend per transfer. There's no post-quantum
+          roadmap for it, because the model doesn't allow one.</li>
+          <li><strong>Its proofs grow with every hop</strong>, and each recipient re-checks the whole
+          history. We re-check the history too. The difference: each of our hops is a fixed-size
+          proof that keeps the amounts hidden.</li>
+          <li><strong>Everyone you pay sees the history and the amounts.</strong> There's no
+          zero-knowledge layer, and none planned.</li>
+        </ul>
+        <p>The argument lands hardest for <strong>real-world assets</strong>. A tokenized 10-year
+        bond issued in 2026 has to stay unforgeable into the mid-2030s, right through the window
+        every quantum estimate argues about. Payments can migrate when the threat shows up. A
+        long-dated asset has to outlive it.</p>
+        <p class="muted">Taproot Assets is what excellent engineering achieves <em>inside</em> the
+        classical UTXO model. Ultraviolet is what becomes possible by leaving it.
+        <a href="taproot.html">Full head-to-head →</a></p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Doesn't BIP-110 kill this? Isn't it "chain spam"?</summary>
+      <div class="answer">
+        <p>No. We comply with every BIP-110 rule today. BIP-110 is the proposed soft fork that caps
+        arbitrary data: OP_RETURN at 83 bytes, most new outputs at 34, data pushes at 256. It's
+        aimed at inscription and Ordinals bloat. Two record types now, since <em>creating</em> an
+        asset writes a bigger one than spending does — it carries the asset's name and the amount
+        in the open, which is what lets anyone count the supply.</p>
+        <p>The specification is a <strong>whitepaper</strong>:
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/SPEC.md">SPEC.md</a> — the
+  problem, the design, the threat model, cryptographic foundations, and an honest limitations
+  section, with a constraint map for auditors and a running record of what was measured and what
+  was deleted. It was thirteen chapter files that drifted out of step with each other; now it
+  reads top to bottom.</p>
+  <p>Alongside it, the one list of what is unfinished:
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/spec/99-OPEN-PROBLEMS.md">open
+  problems</a>. Three chapters were <strong>deleted</strong> rather than carried in July 2026 —
+  channels, Lightning interop and an optional speed layer — because all three described
+  mechanisms nobody had built. The <a href="journal.html">journal</a> has the reasoning.</p>
+  
+  </div>
+  <p class="muted" style="margin-top:0.75rem">Long-form versions of the
+  <a href="#faq">FAQ answers above</a>: <a href="compare.html">The Field</a> (the whole landscape) ·
+  <a href="taproot.html">vs Taproot Assets</a>. Plus
+  the no-Lightning payment story, and the
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/GLOSSARY.md">glossary</a>.</p>
+</section>
+
+<footer>
+  ULTRAVIOLET · open protocol, no token · draft + working proof-of-concept, not audited ·
+  MIT · <a href="https://github.com/ultravienet/ultraviolet">github.com/ultravienet/ultraviolet</a>
+</footer>
+
+</main>
+
+<script>
+  (function () {
+    var host = document.getElementById('fibers');
+    if (!host) return;
+    var colors = ['var(--fiber-a)', 'var(--fiber-b)', 'var(--fiber-c)', 'var(--uv)'];
+    for (var i = 0; i < 26; i++) {
+      var f = document.createElement('span');
+      f.className = 'fiber';
+      f.style.left = (Math.random() * 96) + '%';
+      f.style.top = (Math.random() * 92) + '%';
+      f.style.background = colors[i % colors.length];
+      f.style.transform = 'rotate(' + (Math.random() * 180 - 90) + 'deg)';
+      host.appendChild(f);
+    }
+  })();
+</script>
+
+</body>
+</html>

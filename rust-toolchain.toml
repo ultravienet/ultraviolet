@@ -1,0 +1,5 @@
+# Pin the toolchain so CI and local builds agree (#13 F1). One toolchain now:
+# the sovereign STARK builds with plain stable Rust, no zkVM toolchain at all.
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
