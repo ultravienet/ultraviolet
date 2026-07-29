@@ -5,6 +5,7 @@ import {
   ShieldedCsvExplainer,
   TaprootAssetsExplainer,
 } from './ProtocolExplainer';
+import {FormalVerificationExplainer} from './FormalVerificationExplainer';
 import {UltravioletComparison} from './UltravioletComparison';
 import {UltravioletBenchmarks} from './UltravioletBenchmarks';
 
@@ -47,6 +48,14 @@ export const RemotionRoot: React.FC = () => {
         id="UltravioletBenchmarks"
         component={UltravioletBenchmarks}
         durationInFrames={1500}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="FormalVerificationExplainer"
+        component={FormalVerificationExplainer}
+        durationInFrames={2250}
         fps={30}
         width={1920}
         height={1080}
