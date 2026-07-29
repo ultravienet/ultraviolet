@@ -1,0 +1,32 @@
+{
+  "name": "ultraviolet-comparison-film",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A Remotion comparison of Ultraviolet, Shielded CSV, Taproot Assets, and RGB.",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts UltravioletComparison out/ultraviolet-comparison.mp4 --codec=h264 --crf=18",
+    "render:shielded": "remotion render src/index.ts ShieldedCsvExplainer out/shielded-csv-explainer.mp4 --codec=h264 --crf=18",
+    "render:taproot": "remotion render src/index.ts TaprootAssetsExplainer out/taproot-assets-explainer.mp4 --codec=h264 --crf=18",
+    "render:rgb": "remotion render src/index.ts RgbExplainer out/rgb-explainer.mp4 --codec=h264 --crf=18",
+    "render:benchmarks": "remotion render src/index.ts UltravioletBenchmarks out/ultraviolet-benchmarks.mp4 --codec=h264 --crf=18",
+    "render:series": "npm run render && npm run render:shielded && npm run render:taproot && npm run render:rgb && npm run render:benchmarks",
+    "still": "remotion still src/index.ts UltravioletComparison out/poster.png --frame=1650",
+    "still:shielded": "remotion still src/index.ts ShieldedCsvExplainer out/shielded-csv-poster.png --frame=1170",
+    "still:taproot": "remotion still src/index.ts TaprootAssetsExplainer out/taproot-assets-poster.png --frame=1170",
+    "still:rgb": "remotion still src/index.ts RgbExplainer out/rgb-poster.png --frame=1170",
+    "still:benchmarks": "remotion still src/index.ts UltravioletBenchmarks out/ultraviolet-benchmarks-poster.png --frame=1350",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
+  }
+}
