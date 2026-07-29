@@ -1,12 +1,14 @@
 # Ultraviolet film series
 
-Five 1920 × 1080 Remotion films:
+Six 1920 × 1080 Remotion films:
 
 - `UltravioletComparison` — the original 60-second field comparison.
 - `ShieldedCsvExplainer` — a 45-second Shielded CSV architecture explainer.
 - `TaprootAssetsExplainer` — a 45-second Taproot Assets explainer.
 - `RgbExplainer` — a 45-second RGB explainer.
 - `UltravioletBenchmarks` — a 50-second film about the measured prover.
+- `FormalVerificationExplainer` — a 75-second film about Ultraviolet's formal
+  methods, their trust boundary, and the 2026 Collatz/Lean soundness incident.
 
 ## Preview and render
 
