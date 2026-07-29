@@ -70,7 +70,7 @@ const BenchIntro: React.FC = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const p = enter(frame, fps, 15, 38);
-  const number = interpolate(frame, [28, 120], [1.5, 0.3], {
+  const number = interpolate(frame, [28, 120], [0.2, 0.02], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });
@@ -114,7 +114,7 @@ const BenchIntro: React.FC = () => {
             textShadow: `0 0 46px ${ACCENT}48`,
           }}
         >
-          {number.toFixed(1)}s
+          {number.toFixed(2)}s
         </div>
         <div
           style={{
@@ -124,7 +124,7 @@ const BenchIntro: React.FC = () => {
             letterSpacing: 3,
           }}
         >
-          PRIVATE PROOF · ON A PHONE
+          HIDING PROOF · LAPTOP CPU
         </div>
       </div>
       <div
@@ -161,8 +161,8 @@ const BenchIntro: React.FC = () => {
             maxWidth: 820,
           }}
         >
-          No projection. No proving service. The finished Ultraviolet circuit
-          on a laptop and two physical iPhones.
+          The current 16-row circuit on a laptop, with the older phone cohort
+          clearly separated instead of relabeled.
         </div>
       </div>
     </AbsoluteFill>
@@ -177,8 +177,8 @@ const CircuitScene: React.FC = () => {
     'DERIVE NULLIFIER',
     'OPEN OUTPUTS',
     'CONSERVE VALUE',
-    'PROVE OWNERSHIP',
-    'VERIFY WOTS+',
+    'RANGE-CHECK AMOUNTS',
+    'PROVE ANCHOR PREIMAGE',
   ];
   return (
     <AbsoluteFill
@@ -224,7 +224,7 @@ const CircuitScene: React.FC = () => {
                   letterSpacing: -6,
                 }}
               >
-                1,024
+                16
               </div>
               <div
                 style={{
@@ -256,7 +256,7 @@ const CircuitScene: React.FC = () => {
                   letterSpacing: -6,
                 }}
               >
-                457
+                361
               </div>
               <div
                 style={{
@@ -344,34 +344,34 @@ type Metric = {
 const laptopMetrics: Metric[] = [
   {
     label: 'PROVE',
-    standard: '0.070–0.084 s',
-    hiding: '0.202–0.241 s',
-    standardValue: 0.077,
-    hidingValue: 0.222,
+    standard: '~0.011 s',
+    hiding: '~0.01–0.02 s',
+    standardValue: 0.011,
+    hidingValue: 0.015,
     unit: 'seconds',
   },
   {
     label: 'PROOF',
-    standard: '158.3 KB',
-    hiding: '208.0 KB',
-    standardValue: 158.3,
-    hidingValue: 208,
+    standard: '81.5 KB',
+    hiding: '117.2 KB',
+    standardValue: 81.5,
+    hidingValue: 117.2,
     unit: 'kilobytes',
   },
   {
     label: 'VERIFY',
-    standard: '1.4 ms',
+    standard: '1.1 ms',
     hiding: '1.6 ms',
-    standardValue: 1.4,
+    standardValue: 1.1,
     hidingValue: 1.6,
     unit: 'milliseconds',
   },
   {
     label: 'PEAK',
-    standard: '67 MB',
-    hiding: '117 MB',
-    standardValue: 67,
-    hidingValue: 117,
+    standard: '4 MB',
+    hiding: '5 MB',
+    standardValue: 4,
+    hidingValue: 5,
     unit: 'megabytes',
   },
 ];
@@ -643,6 +643,9 @@ const Phone: React.FC<{
 
 const PhoneScene: React.FC = () => {
   const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const old = enter(frame, fps, 20, 32);
+  const current = enter(frame, fps, 42, 32);
   return (
     <AbsoluteFill
       style={{
@@ -651,9 +654,9 @@ const PhoneScene: React.FC = () => {
       }}
     >
       <BenchTitle
-        kicker="03 / Two physical iPhones"
-        title={'THE WITNESS\nSTAYS ON DEVICE.'}
-        aside="The cheap phone is only about 1.15× slower. The prover’s actual memory share differs by just 2 MB."
+        kicker="03 / Cohorts do not mix"
+        title={'THE HONEST\nPHONE NUMBER.'}
+        aside="The signed iOS build has not rerun the current circuit yet. The previous figures belonged to the deleted signature circuit."
       />
       <div
         style={{
@@ -663,26 +666,91 @@ const PhoneScene: React.FC = () => {
           marginTop: 42,
         }}
       >
-        <Phone
-          name="iPhone 17 Pro Max"
-          chip="A19 PRO · IOS 26.5.2"
-          prove="0.284–0.314 s"
-          verify="1.6–1.7 ms"
-          peak="279 MB"
-          share="259 MB"
-          delay={20}
-          color={ACCENT}
-        />
-        <Phone
-          name="iPhone 16e"
-          chip="A18 · IOS 26.2.1"
-          prove="0.331–0.354 s"
-          verify="1.8–2.0 ms"
-          peak="304 MB"
-          share="261 MB"
-          delay={40}
-          color={colors.shielded}
-        />
+        {[
+          {
+            p: old,
+            color: colors.taproot,
+            kicker: 'OLDER SIGNATURE CIRCUIT',
+            trace: '1,024 × 457',
+            value: '0.28–0.35 s',
+            status: 'MEASURED ON TWO IPHONES · WITHDRAWN AS A CURRENT CLAIM',
+          },
+          {
+            p: current,
+            color: ACCENT,
+            kicker: 'CURRENT PROOF-NATIVE CIRCUIT',
+            trace: '16 × 361',
+            value: 'RERUN PENDING',
+            status: 'LAPTOP: ~0.01–0.02 s · SIGNED IOS BUILD NEXT',
+          },
+        ].map((item) => (
+          <div
+            key={item.kicker}
+            style={{
+              opacity: item.p,
+              transform: `translateY(${(1 - item.p) * 45}px)`,
+              minHeight: 430,
+              padding: 36,
+              borderRadius: 30,
+              border: `1px solid ${item.color}66`,
+              background: `linear-gradient(145deg, ${item.color}13, ${colors.panel})`,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  color: item.color,
+                  fontFamily: fonts.mono,
+                  fontSize: 17,
+                  fontWeight: 900,
+                  letterSpacing: 2,
+                }}
+              >
+                {item.kicker}
+              </div>
+              <div
+                style={{
+                  marginTop: 35,
+                  color: colors.ink,
+                  fontFamily: fonts.display,
+                  fontSize: 72,
+                  fontWeight: 900,
+                  letterSpacing: -4,
+                }}
+              >
+                {item.trace}
+              </div>
+              <div
+                style={{
+                  marginTop: 18,
+                  color: item.color,
+                  fontFamily: fonts.display,
+                  fontSize: item.value.length > 13 ? 49 : 64,
+                  fontWeight: 900,
+                  letterSpacing: -3,
+                }}
+              >
+                {item.value}
+              </div>
+            </div>
+            <div
+              style={{
+                paddingTop: 22,
+                borderTop: `1px solid ${item.color}38`,
+                color: colors.muted,
+                fontFamily: fonts.mono,
+                fontSize: 15,
+                lineHeight: 1.5,
+                letterSpacing: 1.3,
+              }}
+            >
+              {item.status}
+            </div>
+          </div>
+        ))}
       </div>
       <Reveal
         delay={155}
@@ -694,7 +762,7 @@ const PhoneScene: React.FC = () => {
           textAlign: 'center',
         }}
       >
-        Proof sizes are byte-identical to the laptop build: 208.0 KB.
+        Withdrawing a stale number is part of measuring honestly.
       </Reveal>
     </AbsoluteFill>
   );
@@ -725,8 +793,8 @@ const PrivacyPriceScene: React.FC = () => {
         }}
       >
         {[
-          {p: left, value: '2.8×', label: 'PROVE TIME'},
-          {p: right, value: '1.3×', label: 'PROOF SIZE'},
+          {p: left, value: '≈1×', label: 'PROVE TIME'},
+          {p: right, value: '1.44×', label: 'PROOF SIZE'},
         ].map((item) => (
           <div
             key={item.label}
@@ -842,10 +910,10 @@ const BenchFinale: React.FC = () => {
             letterSpacing: -5,
           }}
         >
-          A PRIVATE PROOF
+          A HIDING PROOF
           <br />
           IN ABOUT
-          <span style={{color: ACCENT}}> 0.3 SECONDS.</span>
+          <span style={{color: ACCENT}}> 0.01–0.02 SECONDS.</span>
         </div>
         <div
           style={{
@@ -855,8 +923,8 @@ const BenchFinale: React.FC = () => {
             marginTop: 28,
           }}
         >
-          Fast enough that a self-custodial phone never sends its payment
-          secrets to a prover.
+          Measured on laptop CPU. The current signed-iOS rerun is still
+          pending—no borrowed phone number.
         </div>
         <div
           style={{

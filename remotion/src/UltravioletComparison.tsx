@@ -70,7 +70,7 @@ const protocols: Protocol[] = [
     name: 'Ultraviolet',
     short: 'UV',
     color: colors.uv,
-    owner: 'Notes → WOTS+',
+    owner: 'Notes → hash preimage',
     anchor: '64-byte records',
     private: true,
     postQuantum: true,
@@ -162,8 +162,8 @@ const IntroScene: React.FC = () => {
         >
           FOUR ARCHITECTURES.
           <br />
-          ONE DIFFERENT
-          <span style={{color: colors.uv}}> THREAT MODEL.</span>
+          ONE
+          <span style={{color: colors.uv}}> FAMILY TREE.</span>
         </div>
       </div>
 
@@ -355,7 +355,7 @@ const FieldScene: React.FC = () => {
             letterSpacing: -3,
           }}
         >
-          SAME CHAIN. DIFFERENT PLACE TO PUT TRUST.
+          COUSINS, NOT STRANGERS.
         </div>
       </Reveal>
       <div
@@ -484,7 +484,7 @@ const RecordStream: React.FC<{delay: number}> = ({delay}) => {
           marginTop: 14,
         }}
       >
-        BITCOIN ORDERS OPAQUE 64-BYTE RECORDS
+        BITCOIN ORDERS OPAQUE ≈64-BYTE APPLICATION RECORDS
       </div>
     </div>
   );
@@ -657,9 +657,15 @@ const OwnershipScene: React.FC = () => {
                 paddingTop: 25,
               }}
             >
-              <Tick state="no" label="No UTXO required to receive" />
+              <Tick
+                state="no"
+                label="Requires a Bitcoin UTXO to receive"
+              />
               <div style={{height: 16}} />
-              <Tick state="yes" label="Ultraviolet swaps Schnorr for WOTS+" />
+              <Tick
+                state="yes"
+                label="UV proves a hash preimage—no spend signature"
+              />
             </div>
           </div>
         </Reveal>
@@ -789,15 +795,32 @@ const HistoryPacket: React.FC<{
 
 const PrivacyScene: React.FC = () => {
   const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const records = [
+    {
+      name: 'SHIELDED CSV',
+      color: colors.shielded,
+      size: '≈64 B / TX*',
+      shape: 'AGGREGATE NULLIFIER',
+      detail: 'Schnorr / NISSHAC · amortized after publisher aggregation',
+    },
+    {
+      name: 'ULTRAVIOLET',
+      color: colors.uv,
+      size: '64 B / SPEND',
+      shape: 'nf  ‖  H(private bundle)',
+      detail: 'Hash-only record · current carrier transaction is 143–186 vB',
+    },
+  ];
   return (
     <AbsoluteFill
       style={{
         opacity: sceneOpacity(frame, 300),
-        padding: '140px 90px 100px',
+        padding: '132px 90px 92px',
       }}
     >
       <Reveal>
-        <Kicker>02 / What the next holder learns</Kicker>
+        <Kicker>02 / What Bitcoin sees</Kicker>
         <div
           style={{
             display: 'flex',
@@ -810,15 +833,14 @@ const PrivacyScene: React.FC = () => {
             style={{
               color: colors.ink,
               fontFamily: fonts.display,
-              fontSize: 68,
+              fontSize: 64,
               lineHeight: 1,
               fontWeight: 900,
               letterSpacing: -3,
             }}
           >
-            PRIVACY TRAVELS
-            <br />
-            WITH THE ASSET.
+            THE TWO PRIVATE DESIGNS
+            <br />LOOK ALMOST THE SAME.
           </div>
           <div
             style={{
@@ -829,46 +851,161 @@ const PrivacyScene: React.FC = () => {
               lineHeight: 1.42,
             }}
           >
-            RGB v0.12 and Taproot Assets reveal amounts and lineage in
-            recipient proofs. Shielded CSV and Ultraviolet use zero-knowledge
-            validity.
+            Both publish opaque anti-double-spend data. Bitcoin orders it;
+            receivers interpret it. The difference is not transfer-chain
+            visibility.
           </div>
         </div>
       </Reveal>
 
       <div
         style={{
-          marginTop: 43,
-          padding: '26px 32px',
-          borderRadius: 26,
-          background: 'rgba(17,11,29,.72)',
-          border: `1px solid ${colors.line}`,
           display: 'grid',
-          gap: 2,
+          gridTemplateColumns: '1fr 1fr',
+          gap: 28,
+          marginTop: 42,
         }}
       >
-        {protocols.map((protocol, index) => (
-          <HistoryPacket
-            key={protocol.name}
-            protocol={protocol}
-            index={index}
-          />
-        ))}
+        {records.map((record, index) => {
+          const p = enter(frame, fps, 24 + index * 18, 30);
+          return (
+            <div
+              key={record.name}
+              style={{
+                opacity: p,
+                transform: `translateY(${(1 - p) * 36}px)`,
+                padding: '31px 34px',
+                borderRadius: 26,
+                border: `1px solid ${record.color}66`,
+                background: `linear-gradient(145deg, ${record.color}13, ${colors.panel})`,
+                boxShadow: `0 0 45px ${record.color}16`,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  color: record.color,
+                  fontFamily: fonts.mono,
+                  fontSize: 18,
+                  fontWeight: 900,
+                  letterSpacing: 2.5,
+                }}
+              >
+                <span>{record.name}</span>
+                <span>{record.size}</span>
+              </div>
+              <div
+                style={{
+                  marginTop: 30,
+                  minHeight: 105,
+                  display: 'grid',
+                  placeItems: 'center',
+                  borderRadius: 18,
+                  border: `1px solid ${record.color}36`,
+                  background: `${record.color}0B`,
+                  color: colors.ink,
+                  fontFamily: fonts.display,
+                  fontSize: 31,
+                  fontWeight: 900,
+                  letterSpacing: -1,
+                }}
+              >
+                {record.shape}
+              </div>
+              <div
+                style={{
+                  marginTop: 20,
+                  color: colors.muted,
+                  fontFamily: fonts.body,
+                  fontSize: 20,
+                  lineHeight: 1.4,
+                }}
+              >
+                {record.detail}
+              </div>
+            </div>
+          );
+        })}
       </div>
+
       <Reveal
-        delay={190}
+        delay={88}
+        style={{
+          marginTop: 28,
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          border: `1px solid ${colors.line}`,
+          borderRadius: 22,
+          overflow: 'hidden',
+          background: 'rgba(17,11,29,.72)',
+        }}
+      >
+        <div style={{padding: '24px 28px'}}>
+          <div
+            style={{
+              color: colors.muted,
+              fontFamily: fonts.mono,
+              fontSize: 14,
+              letterSpacing: 2,
+            }}
+          >
+            PUBLIC SPEND LEAKAGE
+          </div>
+          <div
+            style={{
+              marginTop: 9,
+              color: colors.ink,
+              fontFamily: fonts.body,
+              fontSize: 21,
+            }}
+          >
+            Timing, order, and conflicts—not asset, amount, sender, receiver, or
+            asset graph.
+          </div>
+        </div>
+        <div
+          style={{
+            padding: '24px 28px',
+            borderLeft: `1px solid ${colors.line}`,
+          }}
+        >
+          <div
+            style={{
+              color: colors.uvBright,
+              fontFamily: fonts.mono,
+              fontSize: 14,
+              letterSpacing: 2,
+            }}
+          >
+            ULTRAVIOLET ISSUANCE IS DIFFERENT
+          </div>
+          <div
+            style={{
+              marginTop: 9,
+              color: colors.ink,
+              fontFamily: fonts.body,
+              fontSize: 21,
+            }}
+          >
+            76 public bytes: tag + amount + asset ID + genesis commitment.
+          </div>
+        </div>
+      </Reveal>
+      <div
         style={{
           position: 'absolute',
           right: 90,
-          bottom: 85,
-          color: colors.uvBright,
+          bottom: 45,
+          color: colors.muted,
           fontFamily: fonts.mono,
-          fontSize: 17,
-          letterSpacing: 2,
+          fontSize: 13,
+          letterSpacing: 1.5,
         }}
       >
-        UV TODAY: ONE FIXED-SIZE HIDING STARK + ONE SETTLEMENT LOOKUP PER HOP
-      </Reveal>
+        * SHIELDED CSV PAPER TARGET · APPLICATION PAYLOAD, NOT FULL BITCOIN TX
+      </div>
     </AbsoluteFill>
   );
 };
@@ -1024,7 +1161,7 @@ const QuantumScene: React.FC = () => {
               fontWeight: 800,
             }}
           >
-            ONLY ONE CHANGES THE KEY
+            ONLY ONE REMOVES THE SPEND SIGNATURE
           </div>
           <div
             style={{
@@ -1037,9 +1174,9 @@ const QuantumScene: React.FC = () => {
               marginTop: 18,
             }}
           >
-            WOTS+
+            ANCHOR
             <br />
-            OWNERSHIP.
+            PREIMAGE.
             <br />
             HASH-ONLY
             <br />
@@ -1084,12 +1221,12 @@ const matrixRows: Array<{
     ],
   },
   {
-    label: 'Past amounts private',
+    label: 'Receive work',
     values: [
-      {text: 'NO', tone: 'no'},
-      {text: 'NO', tone: 'no'},
-      {text: 'YES', tone: 'yes'},
-      {text: 'YES', tone: 'yes'},
+      {text: 'O(HISTORY)', tone: 'no'},
+      {text: 'O(LINEAGE)', tone: 'no'},
+      {text: 'O(1)', tone: 'yes'},
+      {text: 'O(HISTORY)', tone: 'mixed'},
     ],
   },
   {
@@ -1369,7 +1506,7 @@ const FinaleScene: React.FC = () => {
             marginTop: 33,
           }}
         >
-          THE SPECTRUM BEYOND RGB
+          COUSINS, NOT STRANGERS
         </div>
         <div
           style={{
@@ -1383,11 +1520,11 @@ const FinaleScene: React.FC = () => {
             textShadow: `0 0 ${40 * glow}px rgba(168,121,255,.32)`,
           }}
         >
-          PRIVATE ASSETS.
+          LEARN FROM EACH.
           <br />
-          NO RECEIVE UTXO.
+          NAME THE TRADEOFF.
           <br />
-          <span style={{color: colors.uv}}>POST-QUANTUM BY DESIGN.</span>
+          <span style={{color: colors.uv}}>BUILD THE NEXT BRANCH.</span>
         </div>
         <div
           style={{
@@ -1397,7 +1534,8 @@ const FinaleScene: React.FC = () => {
             marginTop: 32,
           }}
         >
-          Message now. Bitcoin within the hour. Hash security all the way down.
+          Bitcoin orders. Holders validate. Ownership, receive work, and
+          issuance define the branch.
         </div>
         <div
           style={{

@@ -65,7 +65,7 @@ const configs: Record<ProtocolId, ExplainerConfig> = {
       {
         number: '02',
         title: 'PUBLISH',
-        body: 'A compact 64-byte transaction is ordered by Bitcoin to rule out double spends.',
+        body: 'A publisher batches opaque nullifiers; the paper targets about 64 on-chain bytes per transaction after aggregation.',
       },
       {
         number: '03',
@@ -79,7 +79,7 @@ const configs: Record<ProtocolId, ExplainerConfig> = {
       },
     ],
     flowNote:
-      'The 64-byte footprint is per transaction, independent of how many coins it spends and creates.',
+      'That is application payload, not the size of a complete Bitcoin transaction. Bitcoin supplies order, not asset validation.',
     strengths: [
       {
         title: 'PRIVATE BY CONSTRUCTION',
@@ -104,9 +104,9 @@ const configs: Record<ProtocolId, ExplainerConfig> = {
         body: 'The protocol is a paper and reference design, not a production asset network.',
       },
     ],
-    finale: 'THE ARCHITECTURE\nULTRAVIOLET BUILDS ON.',
+    finale: 'THE CLOSEST\nARCHITECTURAL ANCESTOR.',
     finaleSub:
-      'Shielded CSV contributed the 64-byte nullifier log, private client-side coins, and proof-carrying validity.',
+      'Ultraviolet keeps the opaque spend log and private notes, then changes authorization, issuance, and today’s receive-cost tradeoff.',
     source: 'EPRINT.IACR.ORG/2025/068',
   },
   taproot: {
@@ -170,9 +170,9 @@ const configs: Record<ProtocolId, ExplainerConfig> = {
         body: 'A holder needs a Taproot UTXO, and ownership inherits Bitcoin’s classical key assumptions.',
       },
     ],
-    finale: 'THE STRONGEST SHIPPED\nASSET RAIL ON BITCOIN.',
+    finale: 'THE LESSON:\nOPERATIONS ARE PROTOCOL.',
     finaleSub:
-      'Taproot Assets is excellent engineering inside the classical, UTXO-bound model.',
+      'Proof delivery, indexing, recovery, liquidity, and wallet UX are part of the rail—not plumbing around it.',
     source: 'DOCS.LIGHTNING.ENGINEERING / TAPROOT ASSETS',
   },
   rgb: {
@@ -236,9 +236,9 @@ const configs: Record<ProtocolId, ExplainerConfig> = {
         body: 'Receiving needs a new seal, and the anchor remains exposed to classical key assumptions.',
       },
     ],
-    finale: 'SEND LIGHT.\nVERIFY THE WHOLE STORY.',
+    finale: 'THE FOUNDATIONAL\nCLIENT-SIDE MOVE.',
     finaleSub:
-      'RGB made client-side validation practical. Its cost appears when every new holder replays the past.',
+      'Keep contract state with its holders. Let Bitcoin close the seal. Make the receiver validate the story.',
     source: 'DOCS.RGB.INFO / CLIENT-SIDE VALIDATION',
   },
 };
@@ -360,7 +360,7 @@ const ShieldedModel: React.FC<{color: string}> = ({color}) => {
   const {fps} = useVideoConfig();
   const nodes = [
     {x: 0, label: 'SENDER', sub: 'private coin + witness'},
-    {x: 1, label: 'BITCOIN', sub: '64-byte transaction'},
+    {x: 1, label: 'BITCOIN', sub: '≈64-byte payload*'},
     {x: 2, label: 'RECEIVER', sub: 'new coin + PCD'},
   ];
   const line = interpolate(frame, [40, 130], [0, 1], clamp);
@@ -431,7 +431,7 @@ const ShieldedModel: React.FC<{color: string}> = ({color}) => {
                   }30`,
                 }}
               >
-                {index === 1 ? '64 BYTES' : index === 0 ? 'COIN' : 'PCD ✓'}
+                {index === 1 ? '≈64 B*' : index === 0 ? 'COIN' : 'PCD ✓'}
               </div>
               <div
                 style={{

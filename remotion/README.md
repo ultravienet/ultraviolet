@@ -24,14 +24,18 @@ Each render and poster is written to `out/`. Individual `render:*` and
 
 ## Story
 
-1. Four architectures on the same Bitcoin base layer.
-2. UTXO-bound ownership versus client-side notes and nullifier records.
-3. What each receiver learns about amounts and history.
-4. Classical Schnorr ownership versus Ultraviolet's hash-based WOTS+ path.
-5. An explicit maturity check: RGB and Taproot Assets ship on mainnet,
+1. Four related architectures on the same Bitcoin base layer.
+2. UTXO-bound ownership versus client-side notes and ordered records.
+3. The nearly identical public spend surface of Shielded CSV and Ultraviolet,
+   separated from Ultraviolet's deliberately public issuance records.
+4. Classical Schnorr authorization versus Ultraviolet's signature-free
+   anchor-preimage proof.
+5. The different lesson Ultraviolet takes from RGB, Taproot Assets, and
+   Shielded CSV.
+6. An explicit maturity check: RGB and Taproot Assets ship on mainnet,
    Shielded CSV is a paper, and Ultraviolet is unaudited research with a working
    core and public signet demo.
 
 The comparison copy is intentionally narrower than the full protocol analysis.
-Its source of truth is [`../spec/10-COMPARISONS.md`](../spec/10-COMPARISONS.md),
+Its source of truth is [the related-work section of `../SPEC.md`](../SPEC.md#12-related-work),
 with status language aligned to [`../README.md`](../README.md).

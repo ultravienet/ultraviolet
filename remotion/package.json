@@ -12,12 +12,12 @@
     "render:benchmarks": "remotion render src/index.ts UltravioletBenchmarks out/ultraviolet-benchmarks.mp4 --codec=h264 --crf=18",
     "render:formal": "remotion render src/index.ts FormalVerificationExplainer out/formal-verification-explainer.mp4 --codec=h264 --crf=18",
     "render:series": "npm run render && npm run render:shielded && npm run render:taproot && npm run render:rgb && npm run render:benchmarks && npm run render:formal",
-    "still": "remotion still src/index.ts UltravioletComparison out/poster.png --frame=1650",
-    "still:shielded": "remotion still src/index.ts ShieldedCsvExplainer out/shielded-csv-poster.png --frame=1170",
-    "still:taproot": "remotion still src/index.ts TaprootAssetsExplainer out/taproot-assets-poster.png --frame=1170",
-    "still:rgb": "remotion still src/index.ts RgbExplainer out/rgb-poster.png --frame=1170",
-    "still:benchmarks": "remotion still src/index.ts UltravioletBenchmarks out/ultraviolet-benchmarks-poster.png --frame=1350",
-    "still:formal": "remotion still src/index.ts FormalVerificationExplainer out/formal-verification-poster.png --frame=1995",
+    "still": "remotion still src/index.ts UltravioletComparison out/poster.png --frame=1700",
+    "still:shielded": "remotion still src/index.ts ShieldedCsvExplainer out/shielded-csv-poster.png --frame=1200",
+    "still:taproot": "remotion still src/index.ts TaprootAssetsExplainer out/taproot-assets-poster.png --frame=1200",
+    "still:rgb": "remotion still src/index.ts RgbExplainer out/rgb-poster.png --frame=1200",
+    "still:benchmarks": "remotion still src/index.ts UltravioletBenchmarks out/ultraviolet-benchmarks-poster.png --frame=1375",
+    "still:formal": "remotion still src/index.ts FormalVerificationExplainer out/formal-verification-poster.png --frame=2070",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
