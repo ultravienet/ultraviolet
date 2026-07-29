@@ -1,0 +1,21 @@
+[package]
+name = "uv-btc"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Bitcoin backend for the Ultraviolet v2 wallet: OP_RETURN records, first-occurrence index. Works against regtest and signet."
+
+[dependencies]
+uv-air = { path = "../air" }
+uv-kernel2 = { path = "../kernel2" }
+uv-wallet2 = { path = "../wallet2" }
+sha2 = "0.10"
+p3-baby-bear = "0.4.3"
+bitcoin = "0.32"
+bitcoincore-rpc = "0.19"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+
+[dev-dependencies]
+tempfile = "3"

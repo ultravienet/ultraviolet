@@ -1,0 +1,21 @@
+[package]
+name = "uv-iosffi"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "C entry point so an iOS app can run the prover and report timings."
+
+[lib]
+# staticlib so an Xcode target can link it directly.
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+uv-air = { path = "../air" }
+p3-baby-bear = "0.4.3"
+p3-field = "0.4.3"
+p3-symmetric = "0.4.3"
+serde = { version = "1", features = ["derive"] }
+bincode = "1"
+uv-app = { path = "../app" }
+uv-wallet2 = { path = "../wallet2" }
+serde_json = "1"

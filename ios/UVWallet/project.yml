@@ -1,0 +1,36 @@
+# Generated into an .xcodeproj by `xcodegen` (see ios/build-wallet.sh).
+#
+# The project file is generated rather than committed: a pbxproj is a merge
+# hazard and an opaque diff, and everything that actually matters here — the
+# sources, the linked static library, the deployment target — is this file.
+name: UVWallet
+options:
+  bundleIdPrefix: net.ultravie
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+targets:
+  UVWallet:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.ultravie.uvwallet
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Ultraviolet
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        # The Rust static library, built by ios/build-wallet.sh for whichever
+        # destination is being built (device or simulator).
+        LIBRARY_SEARCH_PATHS:
+          - "$(inherited)"
+          - "$(PROJECT_DIR)/lib/$(PLATFORM_NAME)"
+        OTHER_LDFLAGS:
+          - "$(inherited)"
+          - "-luv_iosffi"
