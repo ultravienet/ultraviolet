@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["air", "app", "kernel2", "wallet2", "btc", "envelope", "iosffi"]
+
+# Poseidon2 is the only hash on the money path and the proof system's own, so
+# there is no crypto crate needing a dev-profile exception any more.
+

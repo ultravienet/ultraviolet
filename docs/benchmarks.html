@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ultraviolet — Benchmarks</title>
+<style>
+  :root {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+    --display: "Futura", "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif;
+    --body: "Charter", "Iowan Old Style", "Georgia", serif;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0714;
+      --surface: #140E22;
+      --surface2: #1C1430;
+      --ink: #E9E4F4;
+      --muted: #9C93B8;
+      --uv: #9D6BFF;
+      --uv-soft: rgba(157, 107, 255, 0.14);
+      --line: #2A2140;
+      --fiber-a: #60A5FA;
+      --fiber-b: #34D399;
+      --fiber-c: #FBBF24;
+      --fiber-opacity: 0.6;
+      --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B0714;
+    --surface: #140E22;
+    --surface2: #1C1430;
+    --ink: #E9E4F4;
+    --muted: #9C93B8;
+    --uv: #9D6BFF;
+    --uv-soft: rgba(157, 107, 255, 0.14);
+    --line: #2A2140;
+    --fiber-a: #60A5FA;
+    --fiber-b: #34D399;
+    --fiber-c: #FBBF24;
+    --fiber-opacity: 0.6;
+    --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+  main { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
+  section { margin-top: 4.5rem; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h2 { font-size: 1.7rem; margin-bottom: 1rem; }
+  h3 { font-size: 1.15rem; }
+  p { max-width: 46rem; }
+  a { color: var(--uv); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--uv); margin: 0 0 0.75rem;
+  }
+  .muted { color: var(--muted); }
+
+  /* ---- Hero ---- */
+  header {
+    position: relative; overflow: hidden;
+    padding: 5.5rem 1.5rem 3.5rem; text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .fibers { position: absolute; inset: 0; pointer-events: none; }
+  .fiber { position: absolute; width: 26px; height: 2px; border-radius: 2px; opacity: var(--fiber-opacity, 0.3); }
+  h1.wordmark {
+    font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 600; color: var(--uv); text-shadow: var(--glow);
+  }
+  .tagline { font-size: 1.2rem; font-style: italic; color: var(--muted); margin: 1rem auto 0; }
+  .sub { margin: 1.25rem auto 0; max-width: 44rem; }
+
+  /* ---- Spectrum strip ---- */
+  .spectrum { max-width: 56rem; margin: 3rem auto 0; }
+  .strip {
+    height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg,
+      #2a0a0a 0%, #7f1d1d 14%, #dc2626 30%, #ca8a04 41%,
+      #16a34a 50%, #0891b2 61%, #2563eb 70%, #7c3aed 82%,
+      var(--uv) 88%, var(--bg) 100%);
+  }
+  .strip-labels {
+    display: flex; font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.12em; color: var(--muted); margin-top: 0.5rem;
+  }
+  .strip-labels .visible { flex: 0 0 80%; display: flex; justify-content: space-around; }
+  .strip-labels .beyond { flex: 1; text-align: right; color: var(--uv); font-weight: 700; }
+  .you-are-here {
+    position: relative; height: 0; max-width: 56rem; margin: 0 auto;
+  }
+  .marker {
+    position: absolute; right: 4%; top: -26px; width: 4px; height: 24px;
+    background: var(--uv); border-radius: 2px; box-shadow: var(--glow);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .marker { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.45; } }
+  }
+
+  /* ---- Three properties ---- */
+  .props { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+  .prop {
+    background: var(--surface); border: 1px solid var(--line);
+    border-top: 3px solid var(--uv); padding: 1.5rem;
+  }
+  .prop h3 { margin-bottom: 0.6rem; }
+  .prop p { font-size: 0.97rem; margin: 0; }
+  .prop .num { font-family: var(--mono); color: var(--uv); font-size: 0.75rem; letter-spacing: 0.15em; display: block; margin-bottom: 0.9rem; }
+
+  /* ---- Architecture ---- */
+  .arch { display: grid; gap: 0.75rem; max-width: 46rem; }
+  .layer {
+    display: grid; grid-template-columns: 11rem 1fr; gap: 1rem;
+    background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem;
+    align-items: baseline;
+  }
+  .layer b { font-family: var(--display); font-size: 0.95rem; }
+  .layer span { font-size: 0.95rem; color: var(--muted); }
+  .layer.chain { border-left: 3px solid var(--uv); }
+  @media (max-width: 40rem) {
+    .layer { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+  .arrow { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-size: 0.85rem; background: var(--surface2); white-space: nowrap; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .yes { color: var(--uv); font-weight: 700; }
+  .no { color: var(--muted); }
+  td, th { font-variant-numeric: tabular-nums; }
+
+  /* ---- Callout ---- */
+  .callout {
+    background: var(--uv-soft); border: 1px solid var(--uv);
+    padding: 1.5rem 1.75rem; max-width: 48rem;
+  }
+  .callout p { margin: 0.4rem 0 0; }
+  .callout h3 { color: var(--uv); }
+
+  /* ---- Lists ---- */
+  ul.tight { max-width: 46rem; padding-left: 1.2rem; }
+  ul.tight li { margin-bottom: 0.55rem; }
+
+  footer {
+    margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+  }
+
+  .sitenav {
+    margin-top: 2.25rem; font-family: var(--mono); font-size: 0.75rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .sitenav a { color: var(--uv); text-decoration: none; margin: 0 0.9rem; }
+  .sitenav a:hover { text-decoration: underline; }
+  .sitenav span { color: var(--muted); }
+
+  /* ---- FAQ accordions (shared with index.html) ---- */
+  .faq { display: grid; gap: 0.75rem; max-width: 52rem; }
+  .faq details {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--uv); padding: 0 1.25rem;
+  }
+  .faq summary {
+    font-family: var(--display); font-size: 1.04rem; font-weight: 600;
+    padding: 1rem 0; cursor: pointer; list-style: none; display: flex;
+    justify-content: space-between; gap: 1rem; align-items: baseline;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary span {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--uv); flex: 0 0 auto; font-weight: 400;
+  }
+  .faq details[open] summary { border-bottom: 1px solid var(--line); }
+  .faq .answer { padding: 0.25rem 0 1.25rem; }
+  .faq .answer p { font-size: 0.97rem; }
+  code {
+    font-family: var(--mono); font-size: 0.85em;
+    background: var(--surface2); padding: 0.1em 0.35em; border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+<header style="padding: 3.5rem 1.5rem 2.5rem;">
+  <p class="eyebrow"><a href="index.html">← Ultraviolet</a> · Benchmarks</p>
+  <h1 class="wordmark" style="font-size: clamp(1.8rem, 5vw, 3rem);">What we measured</h1>
+  <p class="tagline">What one payment costs to prove, on the circuit the money path runs today. Every number reproducible from the repository.</p>
+</header>
+
+<main>
+
+<section style="margin-top:2.5rem">
+  <div class="callout">
+    <h3>What this page is</h3>
+    <p>What one payment costs, measured, with the commands to reproduce every figure. Nothing here
+    is projected or extrapolated; where a number is a fit rather than a measurement it says so.</p>
+    <p>How Ultraviolet got here — the measured case for deleting the zero-knowledge virtual machine
+    it was built on, and the six things we believed that measurement disproved — is in the
+    <a href="journal.html">journal</a>. That is history, and history belongs there.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">1 · The circuit</p>
+  <h2>What one payment costs</h2>
+  <p>This is the finished money-path circuit, actually proving and verifying. One complete hop fits
+  in a single table of 16 rows × 361 columns. A commitment here is a hash that pins down a coin's
+  amount without revealing it. The hop opens the input commitment, derives the nullifier (the spend
+  marker), opens the two output commitments, checks conservation over range-checked 16-bit limbs,
+  and proves the spender knows the preimage of the coin's spend anchor — the authorization, standing
+  alone, with no signature:</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Configuration</th><th>Trace</th><th>Prove</th><th>Proof</th><th>Verify</th><th>Peak memory</th></tr>
+    <tr><td>Standard</td><td>16 × 361</td><td class="yes">~0.011 s</td><td class="yes">81.5 KB</td><td>~1.1 ms</td><td class="yes">4 MB</td></tr>
+    <tr><td><strong>Hiding (the payment format)</strong></td><td>16 × 361</td><td>~0.01–0.02 s</td><td>117.2 KB</td><td>~1.6 ms</td><td>5 MB</td></tr>
+  </table>
+  </div>
+  <p style="margin-top:1rem">At 16 rows the prover is dominated by fixed FRI overhead, so prove time
+  is a range across runs, not one sample; trace, proof size and peak are deterministic. Reproduce
+  with <code>UV_MEASURE=standard|hiding cargo run --release -p uv-air --bin measure</code>.</p>
+
+  <p style="margin-top:1rem"><strong>This circuit is a decision, not a teaser.</strong> Spend
+  authorization is in-circuit knowledge of the note's committed anchor preimage, Fiat–Shamir-bound
+  to the exact transfer — 16 rows, one Poseidon2 permutation each. It replaced an in-circuit
+  signature on 2026-07-29 under a rule recorded <em>before</em> measuring, which the signature then
+  missed by 6.7×; the table collapsed from 1,024 rows to 16, an order of magnitude faster on ~23×
+  less memory.</p>
+
+  <p style="margin-top:1rem">Speed was never the stronger reason. <strong>Proving twice reveals
+  nothing</strong>, where signing twice under one key had disclosed it — so losing wallet state no
+  longer risks a secret. The honest cost, stated because it is real: zero-knowledge stops being
+  privacy-only and becomes load-bearing for funds, since the witness now <em>is</em> the
+  authorization. That is contained by one-time anchors. Rule, numbers and the full record:
+  <code>spec/99</code> <code>[PROOF-AUTH]</code>.</p>
+
+  <h3 style="margin-top:2rem">On an actual iPhone</h3>
+  <p>Everything above is a Mac. The number that decides whether this can be a self-custodial
+  wallet is the phone's, because making a private payment means proving one, and proving one needs
+  the payment's secrets. A phone too slow to prove would have to send those secrets to a server —
+  which hands a stranger exactly what the design exists to hide.</p>
+  <p style="margin-top:1rem">Measured 29 July 2026 in a signed Release build on an
+  <strong>iPhone 16e (A18), iOS 26.2.1</strong> — deliberately the cheapest iPhone Apple sells,
+  because "a flagship can do it" is the weaker claim. Six threads:</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Configuration</th><th>Prove</th><th>Proof</th><th>Verify</th><th>Prover's share of memory</th></tr>
+    <tr><td><strong>Hiding (the payment format)</strong></td><td class="yes">0.006–0.012 s</td><td>117.2 KB</td><td>1.25–1.35 ms</td><td class="yes">1 MB</td></tr>
+    <tr><td>Standard</td><td>0.007–0.008 s</td><td>81.5 KB</td><td>0.89–1.08 ms</td><td>2 MB</td></tr>
+  </table>
+  </div>
+  <p style="margin-top:1rem">Read the third column first: <strong>proof sizes are byte-identical
+  to the Mac's</strong>. Same circuit, same parameters, so a faithful port is checkable from the
+  bytes rather than taken on trust. And the phone is <em>not</em> the bottleneck anyone expected —
+  a private payment proves in about a hundredth of a second on a mid-range phone, using about a
+  megabyte more than the app already occupied.</p>
+  <p class="muted" style="margin-top:1rem">For scale, and because this page withdrew a number
+  earlier the same day: the signature circuit these replace took <strong>0.331–0.354 s and
+  ~260 MB of prover memory</strong> on this same 16e. Those figures were honest measurements of
+  code that no longer exists, so they were removed rather than quietly reused — and the
+  replacement is roughly <strong>30× faster on a fraction of the memory</strong>. The witness
+  never leaves the device in either case. Reproduce with the app's own Status → Run diagnostics,
+  which writes a transcript.</p>
+  <p class="muted" style="margin-top:1.5rem">A gap that outside review still owns. The tests show
+  the circuit agrees with a reference implementation on the cases tried, and the mutation sweep shows
+  which constraints a test would notice the loss of — and the latest sweep isolates <strong>16 of
+  16</strong>. Nine of those were survivors until 2026-07-30, resting on the fact that they were
+  byte-identical to constraints of a deleted circuit that had swept clean. That is an inheritance
+  argument, not a test, and it is retired: a probe that evaluates the constraint system without
+  proving, recording each check separately, closed all nine. The same probe answers a question a
+  deletion sweep structurally cannot ask — <strong>all 361 of the circuit's 361 columns provoke an
+  objection when perturbed</strong>, so no column is a value a prover may choose freely. None of that is the same as
+  proving no other input could satisfy the circuit. That gap needs professional review, and it is the
+  kind of bug that mints money if missed.</p>
+
+  <h3 style="margin-top:2rem">Why these proof parameters</h3>
+  <p>Proof size and verification cost scale with the number of spot-checks the verifier makes, and
+  security depends on the <em>product</em> of those checks and a redundancy factor. So you can raise
+  redundancy, cut checks, hold security constant, and get a smaller proof — paying in prove time,
+  which had enormous headroom. The sweep below fixes a Poseidon2 hashing load and varies only the
+  FRI redundancy, to isolate the size/time tradeoff from the money-path trace; the chosen row is the
+  configuration the payment format uses:</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Redundancy</th><th>Spot checks</th><th>Security</th><th>Prove</th><th>Proof</th><th>Verify</th></tr>
+    <tr><td>2×</td><td>100</td><td>~100 bits</td><td>0.010 s</td><td>406.9 KB</td><td>3.20 ms</td></tr>
+    <tr><td>4×</td><td>50</td><td>~100 bits</td><td>0.032 s</td><td>227.4 KB</td><td>1.79 ms</td></tr>
+    <tr><td>8×</td><td>34</td><td>~102 bits</td><td>0.048 s</td><td>170.7 KB</td><td>1.33 ms</td></tr>
+    <tr><td><strong>16× (chosen)</strong></td><td><strong>25</strong></td><td>~100 bits</td><td class="yes">0.040 s</td><td class="yes">137.7 KB</td><td class="yes">1.04 ms</td></tr>
+  </table>
+  </div>
+  <p style="margin-top:1rem">Hence blowup 16 with 25 queries, for roughly 100-bit soundness. Those
+  parameters are a deliberate choice and a fair thing for a reviewer to challenge.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2 · Privacy, priced</p>
+  <h2>What hiding costs</h2>
+  <p>A zero-knowledge proof reveals nothing beyond the fact that it checks out. The hiding
+  configuration is genuinely that; the standard one is not, and exists for benchmarking and for
+  proofs over public data. Hiding costs about <strong>1.4× the proof size</strong> of the standard
+  configuration and, at 16 rows, a prove time within run-to-run noise of it — the blinding mask is a
+  small addition to so short a table.</p>
+  <p>That price bought a decision: <strong>hiding is the payment format, and the only one.</strong>
+  A note carries one hiding proof per hop, so amounts, keys and randomness stay confidential along a
+  coin's entire lineage, from issuance to whoever holds it now. A plain-witness mode was considered
+  and rejected — two validation paths is two consensus surfaces, and a mixed lineage inherits its
+  weakest hop's privacy.</p>
+</section>
+
+<section>
+  <p class="eyebrow">3 · Check it yourself</p>
+  <h2>Reproduce every number</h2>
+  <p>Everything on this page is committed and needs only a Rust toolchain. Numbers quoted in the
+  <a href="journal.html">journal</a> for designs that were measured and then deleted are not
+  reproducible from this tree — the code that produced them is gone, which is the point of having
+  deleted it. They are recorded there with the dates they were taken.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Command</th><th>What it measures</th><th>Runtime</th></tr>
+    <tr><td><code>UV_MEASURE=hiding cargo run --release -p uv-air --bin measure</code></td><td>the full money-path hop, hiding (the payment format), with its own peak memory</td><td>~2 s</td></tr>
+    <tr><td><code>UV_MEASURE=standard …</code></td><td>the same hop, standard configuration</td><td>~2 s</td></tr>
+    <tr><td><code>cargo test -p uv-app --test the_whole_system_still_pays</code></td><td>end to end: issuance → two-hop payment → a payment split across two notes → double-spend attempt → supply counted off the chain → reorg reconciliation. Every step asserts rather than prints</td><td>runs in CI</td></tr>
+    <tr><td><code>cargo test -p uv-btc --test reorgs_on_a_real_node</code></td><td>a real <code>bitcoind</code>, two forced reorgs: one where the payment is re-mined and the coin must survive, one where it is lost and the coin must freeze</td><td>~1 min, needs bitcoind</td></tr>
+    <tr><td><code>cargo test --workspace</code></td><td>237 tests including real proofs and the negative-test suite</td><td>~2 min</td></tr>
+  </table>
+  </div>
+  <p style="margin-top:1rem"><strong>Measure one configuration per process.</strong> Peak memory is
+  a process high-water mark, so proving standard and hiding in the same run reports their union,
+  which is neither one's cost — that mistake put a meaningless 146 MB on this page for a while. The
+  harness now refuses to mix them unless you ask for both.</p>
+  <p class="muted">Hardware: one laptop, 16 GB RAM, CPU only, with other applications running, and
+  an iPhone 17 Pro Max for the device row. No GPU, no proving service.</p>
+</section>
+
+<footer>
+  ULTRAVIOLET · BENCHMARKS · July 2026 · <a href="index.html">main page</a> ·
+  <a href="journal.html">journal</a> ·
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/SPEC.md">spec: 04-PROOFS</a> ·
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/SPEC.md">99 (open problems)</a> ·
+  <a href="https://github.com/ultravienet/ultraviolet">source</a>
+</footer>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,290 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # One job for the whole workspace. There is no second toolchain any more: the
+  # sovereign STARK builds with plain stable Rust, so the zkVM job (sp1up, the
+  # RISC-V guest ELF) is gone along with the crates that needed it.
+  build:
+    name: fmt, clippy, tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust (pinned by rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install stable
+      - run: rustup component add rustfmt clippy
+      - uses: Swatinem/rust-cache@v2
+      # The cheapest check in the file, and it exists because the expensive
+      # version of this failure nearly happened. `air/mutants.py` deletes a
+      # constraint, runs the suite, and restores — but a run killed by a
+      # timeout does not restore (SIGTERM does not unwind Python), and the
+      # next run copies the damaged file over its own backup. `wots_air.rs`
+      # sat in a working tree with constraint 9 commented out.
+      #
+      # A repository whose convention is one amended commit and a force push
+      # has no second chance at this: the commit a bad `git add -A` replaces
+      # is gone. So the marker itself is a build failure, here, before
+      # anything slow runs.
+      - name: No mutated constraint source
+        run: |
+          if grep -rn "// MUTANT" air/src/; then
+            echo "::error::a constraint is commented out — air/mutants.py died"
+            echo "without restoring. Recover from air/src/*.rs.orig or git checkout,"
+            echo "and NEVER re-run mutants.py first: it overwrites its own backup."
+            exit 1
+          fi
+          echo "no mutated sources"
+      - run: cargo fmt --all -- --check
+      # `--locked` on both, and it is a consensus matter rather than hygiene.
+      #
+      # Every dependency is declared with a **caret**, so `p3-poseidon2-air =
+      # "0.4.3"` accepts 0.4.4 and up. `Cargo.lock` pins 0.4.3 and is committed,
+      # but nothing was enforcing it — so a resolver that picked a newer patch
+      # could change the Poseidon2 round constants, and therefore change **every
+      # note commitment, nullifier, spend anchor and asset id in existence**.
+      #
+      # That is a consensus fork, and until 2026-07-30 the entire suite would have
+      # stayed green through it: the differential tests compare our vendored
+      # in-circuit evaluation against the same upstream crate the constants come
+      # from, so both sides move together. `air/tests/known_answer_vectors.rs` now
+      # holds literal digests, which is the check that would actually fire — and
+      # `--locked` is the belt to that suspenders, failing the build on lock drift
+      # instead of letting it resolve silently.
+      - name: Clippy
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - name: Tests
+        run: cargo test --locked --workspace
+      # Doc links, because a link to a deleted item is how a reader ends up
+      # believing something that stopped being true. Added 2026-07-30 after
+      # pruning the deleted architectures turned up five of them at once: two
+      # pointing at a verifier removed with the signature circuit, and one at a
+      # test deleted the same hour. None of them broke a build; all of them
+      # would have been read as current. This is the check that runs in the
+      # direction the others do not — from the citation to the thing cited.
+      - name: Doc links resolve
+        run: RUSTDOCFLAGS="-D rustdoc::broken_intra_doc_links" cargo doc --locked --workspace --no-deps
+      # Quoted test counts, because this drifted three times and the third time
+      # four published documents said 224 while the suite held 217 — in the same
+      # session that pruned dead architectures for exactly this reason. A count
+      # in a document is a claim; this makes it one the build can falsify.
+      - name: Quoted counts are true
+        run: ./scripts/check-counts.sh
+      # The end-to-end payment flow — issuance, a two-hop lineage validated in
+      # full, the confirmation policy, a double-spend the sign-log replays
+      # instead of re-preparing, and a reorg quarantine — now a Rust test over
+      # `uv-app`, the shared command layer the iOS app and the Signal fork call
+      # through the FFI. It was `demo/local2.sh` driving the `uv` CLI until the
+      # client pivot deleted the CLI; the flow is the same, exercised through the
+      # exact code path a phone runs. Covered by `cargo test` above, named here
+      # so the log says the end-to-end flow ran.
+      - name: End-to-end flow (in the workspace tests)
+        run: cargo test --locked -p uv-app --test the_whole_system_still_pays
+      # Paying through the FFI's JSON door, the seam the Signal fork inherits.
+      - name: A payment through the FFI door
+        run: cargo test --locked -p uv-iosffi paying_through_the_door
+
+  # The reorg fix, against a real node. Everything about it is unit-tested --
+  # detection, rollback, the fail-open traps -- but a unit test cannot tell you
+  # that Core's behaviour is what the code assumes. This harness already caught
+  # one real bug that no unit test would have (the fix was inert against the
+  # real backend because `refresh()` was never called), which is the argument
+  # for paying the four minutes to keep it running.
+  #
+  # Its own job: it needs a bitcoind download, which should not hold up the fast
+  # feedback from fmt/clippy/tests.
+  regtest:
+    name: reorgs against a real bitcoind
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Not in Ubuntu's repositories, and the PPA is a third party. The release
+      # tarball is signed by the Bitcoin Core maintainers and pinned by version
+      # here; upgrading it is a deliberate edit.
+      - name: Install bitcoind
+        run: |
+          set -euo pipefail
+          VER=27.1
+          URL="https://bitcoincore.org/bin/bitcoin-core-$VER/bitcoin-$VER-x86_64-linux-gnu.tar.gz"
+          curl -fsSL -o /tmp/bitcoin.tar.gz "$URL"
+          tar -xzf /tmp/bitcoin.tar.gz -C /tmp
+          sudo install -m 0755 "/tmp/bitcoin-$VER/bin/bitcoind" /usr/local/bin/bitcoind
+          sudo install -m 0755 "/tmp/bitcoin-$VER/bin/bitcoin-cli" /usr/local/bin/bitcoin-cli
+          bitcoind --version | head -1
+      - name: Install Rust (pinned by rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install stable
+      - uses: Swatinem/rust-cache@v2
+      # `bitcoind` on PATH is what makes this run rather than skip. The test
+      # returns early (green) when the binary is absent, so if the install step
+      # above ever silently fails the job would pass having tested nothing --
+      # check first, and fail loudly if it is missing.
+      - name: Refuse to pass by skipping
+        run: command -v bitcoind
+      # The reorg suite, now a bitcoind-gated Rust test over `BitcoinChain`
+      # rather than the `uv` CLI: a record that survives a re-mine, a record
+      # lost for good rolling the index back, and first-occurrence binding the
+      # earliest confirmed record — the three things only a live node shows.
+      # `--test-threads=1` because each case spawns its own node on a shared
+      # pid-derived port.
+      - name: Reorgs, on a real node
+        run: cargo test --locked -p uv-btc --test reorgs_on_a_real_node -- --test-threads=1 --nocapture
+
+  # The formal models' *rot* checks, not their verification.
+  #
+  # Verification is manual and stays manual (formal/verify.sh, logged in
+  # formal/VERIFIED.md): the deep runs are too slow for a push — channels'
+  # `naiveSettle` took ~45 minutes at depth 5 and depth 6 never converged.
+  #
+  # What runs here is the failure that actually happened: after two crate
+  # renames and the zkVM removal, formal/ cited eight source paths that were
+  # gone, including the test named twice as the real-code replay of the
+  # inflation attack. Nothing turned red, and the models kept being quoted as
+  # evidence. These two checks take seconds and would have caught it.
+  formal:
+    name: formal models (typecheck + references)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # Pinned: the models were developed and verified against this version,
+      # and an unpinned verifier is the [DEPS] problem wearing a different coat.
+      - name: Install Quint 0.32.0
+        run: npm install -g @informalsystems/quint@0.32.0
+      - name: Typecheck every model
+        run: |
+          set -euo pipefail
+          for m in formal/*.qnt; do
+            echo "== $m"
+            quint typecheck "$m"
+          done
+      - name: Every cited source path exists
+        run: ./formal/check-refs.sh
+      - name: The claims matrix is well-formed, and its coverage is reported
+        run: ./formal/claims-coverage.sh
+      # The composition graph. Seven separately-green models can add up to a hole
+      # — the free mint lived in the gap between two of them — so a model with no
+      # stated position relative to the others, or an assumption with no owner,
+      # is a build error rather than something somebody has to notice.
+      - name: Every model is placed in the composition graph
+        run: ./formal/compose-check.sh
+      # The one verification cheap enough for CI. `issuance.qnt`'s counterexample
+      # is found in under a second, and it is the model that says today's rule
+      # loses — a regression here would mean the attack stopped reproducing,
+      # which is as much a failure as an invariant breaking.
+      # **The whole suite, in CI.** This was a manual afternoon and is now about
+      # five minutes, because `channels` — 27 of the old 59 checks, and the one
+      # whose deadlock check took 45 minutes — was deleted along with its spec.
+      #
+      # That is the actual prize from the deletion. A check that takes an
+      # afternoon runs when someone remembers; a check that takes five minutes
+      # runs on every change, forever. `formal/VERIFIED.md` stays as the record
+      # of hand-runs on real hardware, but a regression can no longer wait
+      # months for one.
+      - name: Every model, every documented invariant
+        run: ./formal/verify.sh
+      - name: A hostile carrier cannot lose funds, but discard-on-transient does
+        run: |
+          set -euo pipefail
+          quint verify formal/delivery.qnt --main=keeps \
+            --invariant=noSettledPaymentLost --max-steps=10
+          out=$(quint verify formal/delivery.qnt --main=discards \
+                  --invariant=noSettledPaymentLost --max-steps=8 2>&1 || true)
+          echo "$out" | grep -q '\[violation\]' || {
+            echo "discarding a bundle on a transient verdict no longer loses a settled payment —"
+            echo "the ViewIncomplete regression the model exists to guard has gone unmodelled"; exit 1; }
+      - name: Proof-native authorization holds, and the strawman fails
+        run: |
+          set -euo pipefail
+          quint verify formal/authorization.qnt --main=enforced \
+            --invariant=onlyOwnerSpends --max-steps=8
+          out=$(quint verify formal/authorization.qnt --main=anchorOnly \
+                  --invariant=onlyOwnerSpends --max-steps=6 2>&1 || true)
+          echo "$out" | grep -q '\[violation\]' || {
+            echo "authorizing on the public anchor no longer lets a forger steal — the model"
+            echo "has stopped distinguishing knowing the secret from seeing the public value"; exit 1; }
+      - name: The issuance counterexample still reproduces
+        run: |
+          set -euo pipefail
+          out=$(quint verify formal/issuance.qnt --main=lax \
+                  --invariant=supplyIsKnown --max-steps=6 2>&1 || true)
+          echo "$out" | grep -q '\[violation\]' || {
+            echo "the secret-issuance attack no longer reproduces — the model has"
+            echo "stopped modelling the risk it was written for"; exit 1; }
+          # The free mint: the rule as first IMPLEMENTED, matching a genesis by
+          # amount rather than by identity, so an attacker's coin is waved
+          # through by an honest issuer's record. The design was never this;
+          # the code was, for a few hours. Guarded here so it cannot return.
+          out=$(quint verify formal/issuance.qnt --main=byAmount \
+                  --invariant=supplyIsKnown --max-steps=6 2>&1 || true)
+          echo "$out" | grep -q '\[violation\]' || {
+            echo "the free-mint attack no longer reproduces — matching a genesis"
+            echo "by amount is inflatable and the model must keep saying so"; exit 1; }
+          # The chain-wide sum: all the old one-way-hash record could give, and
+          # it hides an unpublished coin of one asset under another's records.
+          out=$(quint verify formal/issuance.qnt --main=globalSum \
+                  --invariant=assetSupplyIsKnown --max-steps=8 2>&1 || true)
+          echo "$out" | grep -q '\[violation\]' || {
+            echo "a chain-wide supply total no longer reads as unsafe — the asset"
+            echo "id must stay in the clear for per-asset counting to mean anything"; exit 1; }
+          quint verify formal/issuance.qnt --main=strict \
+            --invariant=supplyIsKnown --max-steps=8
+          quint verify formal/issuance.qnt --main=strict \
+            --invariant=assetSupplyIsKnown --max-steps=8
+
+  # Proofs over the PRODUCTION functions, not a model of them — the
+  # shared-source-of-truth tier below Quint. The bugs that have actually cost
+  # this project were classification, comparison and conservation on the host,
+  # so the host's decision logic gets a bounded model checker: every u64
+  # round-trips the amount limbs, every accepted digest/issuance byte string
+  # is the canonical encoding (no aliases for anything keyed by bytes on
+  # Bitcoin), and checked arithmetic never wraps. Ordinary builds never
+  # compile the #[cfg(kani)] modules; this job is the only thing that does.
+  kani:
+    name: proofs on production functions (Kani)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust (pinned by rust-toolchain.toml)
+        run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@v2
+      # The CBMC toolchain download is the slow part; cache it by Kani version.
+      - name: Cache the Kani toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.kani
+          key: kani-1.29.0-${{ runner.os }}
+      # Pinned like every other verifier here: an unpinned prover is the
+      # [DEPS] problem wearing a different coat.
+      - name: Install Kani 1.29.0
+        run: |
+          cargo kani --version 2>/dev/null | grep -q '1\.29\.0' || \
+            cargo install --locked kani-verifier --version 1.29.0
+          cargo kani setup
+      - name: Every harness proves
+        run: cargo kani -p uv-kernel2
+
+  audit-deps:
+    name: dependency advisories
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      # Fatal: an advisory with a CVE against something we ship.
+      - name: Vulnerabilities
+        run: cargo audit
+      # Not fatal, but it must stay visible: unmaintained/unsound/yanked crates.
+      # Known at time of writing: bincode 1.3 unmaintained and still a direct
+      # dependency on the money path's serialization (spec/99 [DEPS]).
+      - name: Informational advisories (unmaintained, unsound, yanked)
+        continue-on-error: true
+        run: cargo audit --deny warnings

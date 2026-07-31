@@ -1,0 +1,1945 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ultraviolet — Journal</title>
+<style>
+  :root {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+    --display: "Futura", "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif;
+    --body: "Charter", "Iowan Old Style", "Georgia", serif;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0714;
+      --surface: #140E22;
+      --surface2: #1C1430;
+      --ink: #E9E4F4;
+      --muted: #9C93B8;
+      --uv: #9D6BFF;
+      --uv-soft: rgba(157, 107, 255, 0.14);
+      --line: #2A2140;
+      --fiber-a: #60A5FA;
+      --fiber-b: #34D399;
+      --fiber-c: #FBBF24;
+      --fiber-opacity: 0.6;
+      --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F4FA;
+    --surface: #FFFFFF;
+    --surface2: #EFEBF8;
+    --ink: #1A1430;
+    --muted: #5D5478;
+    --uv: #6D3AE8;
+    --uv-soft: rgba(109, 58, 232, 0.12);
+    --line: #DDD6EE;
+    --fiber-a: #2563EB;
+    --fiber-b: #059669;
+    --fiber-c: #D97706;
+    --glow: none;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B0714;
+    --surface: #140E22;
+    --surface2: #1C1430;
+    --ink: #E9E4F4;
+    --muted: #9C93B8;
+    --uv: #9D6BFF;
+    --uv-soft: rgba(157, 107, 255, 0.14);
+    --line: #2A2140;
+    --fiber-a: #60A5FA;
+    --fiber-b: #34D399;
+    --fiber-c: #FBBF24;
+    --fiber-opacity: 0.6;
+    --glow: 0 0 24px rgba(157, 107, 255, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+  main { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
+  section { margin-top: 4.5rem; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h2 { font-size: 1.7rem; margin-bottom: 1rem; }
+  h3 { font-size: 1.15rem; }
+  p { max-width: 46rem; }
+  a { color: var(--uv); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--uv); margin: 0 0 0.75rem;
+  }
+  .muted { color: var(--muted); }
+
+  /* ---- Hero ---- */
+  header {
+    position: relative; overflow: hidden;
+    padding: 5.5rem 1.5rem 3.5rem; text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .fibers { position: absolute; inset: 0; pointer-events: none; }
+  .fiber { position: absolute; width: 26px; height: 2px; border-radius: 2px; opacity: var(--fiber-opacity, 0.3); }
+  h1.wordmark {
+    font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 600; color: var(--uv); text-shadow: var(--glow);
+  }
+  .tagline { font-size: 1.2rem; font-style: italic; color: var(--muted); margin: 1rem auto 0; }
+  .sub { margin: 1.25rem auto 0; max-width: 44rem; }
+
+  /* ---- Spectrum strip ---- */
+  .spectrum { max-width: 56rem; margin: 3rem auto 0; }
+  .strip {
+    height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg,
+      #2a0a0a 0%, #7f1d1d 14%, #dc2626 30%, #ca8a04 41%,
+      #16a34a 50%, #0891b2 61%, #2563eb 70%, #7c3aed 82%,
+      var(--uv) 88%, var(--bg) 100%);
+  }
+  .strip-labels {
+    display: flex; font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.12em; color: var(--muted); margin-top: 0.5rem;
+  }
+  .strip-labels .visible { flex: 0 0 80%; display: flex; justify-content: space-around; }
+  .strip-labels .beyond { flex: 1; text-align: right; color: var(--uv); font-weight: 700; }
+  .you-are-here {
+    position: relative; height: 0; max-width: 56rem; margin: 0 auto;
+  }
+  .marker {
+    position: absolute; right: 4%; top: -26px; width: 4px; height: 24px;
+    background: var(--uv); border-radius: 2px; box-shadow: var(--glow);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .marker { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.45; } }
+  }
+
+  /* ---- Three properties ---- */
+  .props { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+  .prop {
+    background: var(--surface); border: 1px solid var(--line);
+    border-top: 3px solid var(--uv); padding: 1.5rem;
+  }
+  .prop h3 { margin-bottom: 0.6rem; }
+  .prop p { font-size: 0.97rem; margin: 0; }
+  .prop .num { font-family: var(--mono); color: var(--uv); font-size: 0.75rem; letter-spacing: 0.15em; display: block; margin-bottom: 0.9rem; }
+
+  /* ---- Architecture ---- */
+  .arch { display: grid; gap: 0.75rem; max-width: 46rem; }
+  .layer {
+    display: grid; grid-template-columns: 11rem 1fr; gap: 1rem;
+    background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.25rem;
+    align-items: baseline;
+  }
+  .layer b { font-family: var(--display); font-size: 0.95rem; }
+  .layer span { font-size: 0.95rem; color: var(--muted); }
+  .layer.chain { border-left: 3px solid var(--uv); }
+  @media (max-width: 40rem) {
+    .layer { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+  .arrow { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-size: 0.85rem; background: var(--surface2); white-space: nowrap; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .yes { color: var(--uv); font-weight: 700; }
+  .no { color: var(--muted); }
+  td, th { font-variant-numeric: tabular-nums; }
+
+  /* ---- Callout ---- */
+  .callout {
+    background: var(--uv-soft); border: 1px solid var(--uv);
+    padding: 1.5rem 1.75rem; max-width: 48rem;
+  }
+  .callout p { margin: 0.4rem 0 0; }
+  .callout h3 { color: var(--uv); }
+
+  /* ---- Lists ---- */
+  ul.tight { max-width: 46rem; padding-left: 1.2rem; }
+  ul.tight li { margin-bottom: 0.55rem; }
+
+  footer {
+    margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+  }
+
+  .sitenav {
+    margin-top: 2.25rem; font-family: var(--mono); font-size: 0.75rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .sitenav a { color: var(--uv); text-decoration: none; margin: 0 0.9rem; }
+  .sitenav a:hover { text-decoration: underline; }
+  .sitenav span { color: var(--muted); }
+
+  /* ---- FAQ accordions (shared with index.html) ---- */
+  .faq { display: grid; gap: 0.75rem; max-width: 52rem; }
+  .faq details {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--uv); padding: 0 1.25rem;
+  }
+  .faq summary {
+    font-family: var(--display); font-size: 1.04rem; font-weight: 600;
+    padding: 1rem 0; cursor: pointer; list-style: none; display: flex;
+    justify-content: space-between; gap: 1rem; align-items: baseline;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary span {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--uv); flex: 0 0 auto; font-weight: 400;
+  }
+  .faq details[open] summary { border-bottom: 1px solid var(--line); }
+  .faq .answer { padding: 0.25rem 0 1.25rem; }
+  .faq .answer p { font-size: 0.97rem; }
+  code {
+    font-family: var(--mono); font-size: 0.85em;
+    background: var(--surface2); padding: 0.1em 0.35em; border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+<header style="padding: 3.5rem 1.5rem 2.5rem;">
+  <p class="eyebrow"><a href="index.html">← Ultraviolet</a> · Journal</p>
+  <h1 class="wordmark" style="font-size: clamp(1.8rem, 5vw, 3rem);">Build journal</h1>
+  <p class="tagline">What was built, what it cost, and what had to be thrown away. Newest first.</p>
+</header>
+
+<main>
+
+<section style="margin-top:2.5rem">
+  <div class="callout">
+    <h3>How to read this</h3>
+    <p>A running log of a design being built in public, including the parts that went backwards.
+    Several entries record work that was later <strong>deleted</strong>: a zero-knowledge virtual
+    machine, a recursive proof design, a payment-rail brand. Those entries stay. The measurements
+    that killed them are the reason the current design looks the way it does.</p>
+    <p>Dates are when the work landed. Every number is measured on one laptop (Apple Silicon),
+    reproducible from the repository at that commit.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-31 · latest</p>
+  <h2>The first model of a watcher, and it says privacy is about traffic, not just crypto</h2>
+
+  <p>Every formal model here so far has asked the same kind of question: can a <em>thief</em> move
+  money they shouldn't? Not one had asked the question a private-payments system actually lives or
+  dies on: what does a <em>watcher</em> — someone who only observes — learn? For the claim the whole
+  pitch rests on, that was the least-tested corner of the project.</p>
+
+  <p>So we built the first model of an observer. It turns on a composition that neither half exposes
+  alone. When you spend, a record appears on Bitcoin — anonymous in itself, just a number at a time.
+  When your payment is delivered, it goes to an addressed inbox — the carrier can't read the amount,
+  but it sees <em>who</em> and <em>when</em>. Each leak is harmless. Put a watcher in front of both,
+  and if a record and a delivery land in the same window, <strong>they pair</strong>: the watcher
+  learns who paid whom, even though the amount stays sealed.</p>
+
+  <p>The model proves it — and proves the two ways out. Hand the record to a miner privately, so
+  there's no on-chain event to see. Or deliver on a different beat than you publish, so the two
+  halves never share a window. Either one, and the pairing breaks. The uncomfortable conclusion the
+  model states plainly: <strong>relationship privacy is a function of traffic and timing, not of the
+  cryptography.</strong> A lone payment on a quiet channel is linkable no matter how good the seal
+  is. That is not a bug to fix; it is a truth to design around, and now it's written down instead of
+  assumed away.</p>
+
+  <h3 style="margin-top:2rem">And a number we'd been quoting without measuring</h3>
+
+  <p>The project says "supply conservation is proven at all depths." That phrase means unbounded
+  <em>steps</em>, but it quietly means only a handful of <em>coins</em> — five, in the model. We'd
+  been honest that the five was convenient rather than measured. So we measured it: the proof
+  verifies over five coins in under a minute. Push to seven and the inductive proof breaks — but,
+  checked carefully, the protocol is fine there (no inflation exists), it's the hand-tuned proof that
+  doesn't stretch without re-tuning. Push to eight and the prover doesn't finish in five minutes.</p>
+
+  <p>So the honest sentence is now precise: proven inductively at five coins, holds without inflation
+  at seven, and extending the proof further is real work, not a formality. The convenient number
+  became a measured one, with its exact edge named. That is the whole point of measuring: you stop
+  being able to round in your own favour.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-31</p>
+  <h2>The only copy, pinned — and a griefing attack priced at pocket change</h2>
+
+  <p><strong>The wallet file is the only copy of a coin's history.</strong> Once a payment settles,
+  the bundle that carried it is deleted, and everything about where the coin has been lives in one
+  file on the device. We had never guarded how that file is encoded — and the encoder underneath is
+  the kind that writes fields back to back with no labels, so swapping two of them, or a routine
+  library update, would read the file back as <em>wrong values</em>, not as an error. A coin's
+  amount read from where its index used to be. Silently. That is not a compatibility annoyance, it
+  is somebody's money quietly becoming a different number.</p>
+
+  <p>Now there are two guards. A version stamped at the front of the file, refused if this build
+  doesn't recognise it. And a <strong>golden fixture</strong>: a real wallet, frozen as exact bytes
+  and committed, that the encoder must reproduce down to the byte and the decoder must read back to
+  the right amount. We checked it bites — reordered two fields of a stored coin, and both halves
+  failed instantly. Change the format on purpose, and you must update the fixture on purpose. That
+  is the whole point.</p>
+
+  <h3 style="margin-top:2rem">"The attacker pays and gains nothing" was hiding the number that matters</h3>
+
+  <p>There is a known nuisance in the design: while your payment waits to confirm, a stranger who
+  spots it can post a conflicting record and, if theirs lands first, destroy your payment. They
+  can't steal it — they gain nothing — so we had filed it as an accepted trade and moved on.</p>
+
+  <p>Then we did the arithmetic we'd been putting off. The attack is one transaction. One
+  transaction costs, at real fee rates, <strong>between about nineteen cents and twenty-eight
+  dollars</strong> — and that price does not change with the size of the payment being destroyed.
+  The same handful of cents strands a payment of any amount. So the honest way to say it is not
+  "accepted trade"; it is <strong>cheap to grief</strong>, and every safety proof in the project
+  stays green while it happens, because nothing is stolen and no coin is created.</p>
+
+  <p>What saves it is not the fee — it is the <em>window</em>. The attacker needs to see your
+  payment in the shared waiting-room before it confirms. Hand the record straight to a miner, or
+  through a private relay, and there is no window and nothing to grief. We had written that down as
+  a nice-to-have. The arithmetic promotes it to <em>the</em> defence — and it is not built yet, so
+  the honest posture is that broadcasting normally, when the network is busy, is the exposed case.
+  Writing the uncomfortable number down is how it stops being invisible.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-31</p>
+  <h2>We asked whether recursion is safe before building it. It is not, as drawn.</h2>
+
+  <p>The design that ships makes whoever receives a coin walk its whole history and check every
+  step. That one choice is behind a long list of costs — receiving is slow, histories can't grow
+  past a limit, the coin's whole past has to travel with it. The fix everyone reaches for is
+  <strong>recursion</strong>: each payment's proof swallows the previous one, so a coin carries a
+  single proof and the receiver checks it once. It is the obvious next move, and we were about to
+  cost it out.</p>
+
+  <p>Before spending weeks measuring whether it is fast enough, we spent an afternoon asking whether
+  it is <em>safe</em>. The answer is a three-step counterexample, and it is the cheapest thing this
+  project has built all week — a formal model, no circuit.</p>
+
+  <p>A recursive proof is welded to the version of Bitcoin's history it was made against. Bitcoin's
+  history occasionally rewrites its most recent blocks — a reorg. The walk survives that: the
+  receiver just walks the new history. <strong>Recursion cannot, because the whole point was to
+  throw the history away.</strong> When a reorg rewrites the blocks a coin's proof was welded to,
+  the proof is now about a past that didn't happen, and there is nothing left to rebuild it from.
+  The coin is completely valid — its payments were re-mined into the new history, nobody
+  double-spent anything — and it is <strong>permanently unspendable</strong>. The money is real and
+  stuck.</p>
+
+  <p>The model says exactly this, in three steps: a block is mined, a coin is received whose proof
+  points at that block, the block is rewritten. Stranded. The control case — a wallet that kept the
+  history and can rebuild — passes. The difference between them is the whole finding: recursion buys
+  its speed by discarding the one thing a reorg makes you need.</p>
+
+  <p>So recursion does not ship as drawn. There are ways forward — wait for enough confirmations
+  that a reorg can't reach your proof; keep just enough history to rebuild; put the thing the proof
+  commits to on-chain so a reorg is at least <em>visible</em> and the coin can be quarantined
+  instead of silently lost — and each has a cost, and each needs its own model. What we will not do
+  is build the fast version, measure it, ship it, and discover this in production. The safety
+  question now sits in front of the speed question, where it belongs.</p>
+
+  <p>This is the same discipline as every other measured decision here: write the rule, then run
+  the experiment. The signature came off the money path because a number said so. A whole class of
+  accumulator designs died to one line of the spec. Recursion's speed might have been dazzling; it
+  would not have mattered.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-31</p>
+  <h2>The command line was the demo. Both are gone.</h2>
+
+  <p>For a year the way to use Ultraviolet was a program called <code>uv</code> — a command line
+  that issued coins, sent payments, scanned for incoming money. It was never the product. The
+  product is a phone app that carries payments inside a chat, the way you already send a photo. So
+  the command line was deleted, along with every demo script that drove it, and the project is now
+  a set of libraries with one client: the iOS app.</p>
+
+  <p><strong>This is a commitment, and the deletions are how you make one real.</strong> A codebase
+  that keeps the old way of doing things "just in case" is a codebase still deciding. The
+  post-quantum Signal-Protocol proof-of-concept, the relay that stood in for a chat server, the
+  probe app, the four demo scripts, the whole command-line wallet — all removed. What a coin does,
+  and whether it is valid, is unchanged. How a person touches it is now one path, not three.</p>
+
+  <h3 style="margin-top:2rem">The rule that made this safe: delete the driver, keep the drive</h3>
+
+  <p>Deleting the command line meant deleting the one thing that ran the <em>whole</em> system at
+  once — issue, pay, receive, reorg, all in sequence against a real chain. And that layer has the
+  best record in this project of finding real bugs: every serious one this month was caught by
+  running the system end to end, not by any proof or unit test.</p>
+
+  <p>So nothing was deleted until its check had a new home. The full payment cycle became a Rust
+  test that drives the <em>shared command layer</em> — the exact code the phone runs — instead of
+  the command line that used to sit on top of it. The reorg suite, which needs a real Bitcoin node
+  to invalidate a block underneath a confirmed payment and watch the wallet react, became a test
+  that spins up a real node and does exactly that. Both pass. The demos are gone; what they proved
+  is not.</p>
+
+  <p>One thing that fell out of the move is worth stating: the send logic itself had been living in
+  the command line, which meant the phone <em>could not actually send</em> — it could show a
+  balance and receive, but not spend, because spending lived in a program the phone does not run.
+  Moving it into the shared layer fixed that. The phone's door now speaks <em>send</em>, and a test
+  pushes a real payment through it. The chat-app fork inherits a client that can already move
+  money.</p>
+
+  <h3 style="margin-top:2rem">And a decision about servers: none of ours, ever</h3>
+
+  <p>The chat app will be a fork of Signal for iOS, provisioned as a <em>linked device</em> to a
+  real Signal account — the same way Signal Desktop works — talking to Signal's own servers. We
+  will not run Signal infrastructure. Not as a fallback, not as a later phase.</p>
+
+  <p>The reason is on the record from a failed attempt: Signal's server can be compiled, but the
+  one way it documents to <em>run</em> disables exactly the features a payment client would touch,
+  and a real deployment needs a separate SMS-verification service <strong>that has no open
+  implementation at all</strong>. There is no version of "host it yourself" that ends anywhere good.
+  The linked-device model never registers a phone number, so it never touches that wall — and it
+  is the model that already carried a real payment across Signal's production servers three days
+  ago. The strongest possible demonstration that an unmodified Signal server will carry these
+  payments is that one already did.</p>
+
+  <p>The repository is smaller by two crates, a command line, and every demo. It does exactly what
+  it did, on the money path. What changed is that it now admits what it is building toward.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-30</p>
+  <h2>Three machines could not prove it. Changing the bookkeeping did.</h2>
+
+  <p>There is a claim this project has wanted to prove properly for weeks: <strong>a coin you
+  accept really descends from a genuine issuance</strong> — nobody spliced a fake ancestor into
+  its history. We had it checked to a depth of eight steps, which is a real result but a bounded
+  one: it says no attack exists in eight moves, not that none exists.</p>
+
+  <p>Getting from "eight moves" to "any number of moves" means giving the prover an argument
+  strong enough to be checked once and hold forever. We tried. It defeated a 4 GB memory budget,
+  then thrashed a 16 GB laptop into 3.4 million page-outs, and then — on a rented 243 GB,
+  64-core Linux machine — ran for 22 minutes and returned <em>table overflow</em>, which is the
+  prover hitting a limit inside itself rather than running out of anything. That last result was
+  the useful one, because it said plainly: <strong>more hardware is not the answer.</strong></p>
+
+  <p>Today the same property proved <strong>in 15.8 seconds, on the laptop that could not do it
+  at all.</strong> Nothing about the machine changed. What changed is how the question was
+  asked.</p>
+
+  <p>The old phrasing made the prover search. To ask "does this coin descend from issuance?" it
+  walked backwards through every possible chain of hops — and because the proof has to start from
+  an <em>arbitrary</em> situation rather than a realistic one, it had to consider every
+  combination the rules permit rather than the handful a real history contains. The new phrasing
+  removes the search. The model now keeps a running list of coins known to descend from issuance,
+  updated one hop at a time as hops are created, and the question becomes "is this coin on the
+  list?" — a lookup instead of an excavation.</p>
+
+  <p><strong>The obvious objection is the right one, and it is the whole story.</strong> A list
+  the model maintains for itself proves nothing about the protocol. If we simply write down
+  "these coins are fine" and then check that the coins we said are fine are fine, we have proved
+  our own bookkeeping. This project has made exactly that mistake before — an earlier
+  supply-conservation argument was airtight and completely vacuous — so the list carries two
+  extra requirements. First, anything reachable from a listed coin is itself listed; that is the
+  requirement doing the actual work. Second, and this is the anti-circularity one: <strong>every
+  coin on the list must have a real hop, present in the model, that created it from another
+  listed coin.</strong> Without the second requirement the list could name anything at all. With
+  it, membership is backed by hops that genuinely exist.</p>
+
+  <p>One step still happens on paper rather than by machine, and it is stated in the repository
+  rather than left implicit: hop numbers only ever increase, so following the "who created me"
+  links always moves to a strictly smaller number, and a sequence of decreasing counting numbers
+  has to stop — and the rules only allow it to stop at the original issuance. That is ordinary
+  arithmetic, and it is the kind of reasoning this style of proof structurally cannot do about
+  itself. A separate machine check confirms the list matches the real hop history, so an error in
+  the encoding shows up as a counterexample rather than as a confident comment.</p>
+
+  <h3 style="margin-top:2rem">And then the same question, asked about the other six proofs</h3>
+
+  <p>Four checks now guard the new argument, and the sharpest is this: <strong>the proof must
+  fail when the protocol's rule is removed.</strong> If it still succeeds against a version where
+  receivers never check that hops link up, then it was never about the protocol. It fails, as it
+  must.</p>
+
+  <p>Which raised an uncomfortable question about the six all-depths proofs we already had. A
+  comment claimed each of them had a companion check like that. <strong>It was false — only the
+  new one did.</strong> So six were added, one per proof, and all six behave correctly: remove
+  the rule and the proof collapses. Nothing was actually wrong, but for weeks nothing in a
+  green test run would have told us if it had been. The suite is now 68 checks, up from 38.</p>
+
+  <p>A bug in the attack itself turned up while doing this. The model's "fabricate a fake
+  ancestor" move drew its imaginary coin from a range whose low end <em>overlapped a coin the
+  model can really create</em> — so some supposed forgeries were quietly spending a genuine coin
+  and were not attacks at all. Fixed by numbering fictional coins above every real one. The
+  attack got sharper, not weaker.</p>
+
+  <h3 style="margin-top:2rem">The accumulator, measured before deciding</h3>
+
+  <p>The biggest open design here is an <strong>accumulator</strong>: a summary of every spend
+  record on Bitcoin that would let a payment prove its own settlement, so a receiver never has to
+  ask a server about a specific coin. That question — "has this coin been spent?" — is the last
+  place the design leaks, because asking it tells the server which coins are yours.</p>
+
+  <p>Following the rule that worked last week, the decision criteria were written down
+  <em>before</em> measuring anything. And writing them down split the problem in two, which is
+  the actual result of the day. Proving settlement in-circuit is one mechanism; compressing a
+  whole coin history into a single proof is another. They cost differently, they risk
+  differently, and deciding them together would let the hard half veto the easy half.</p>
+
+  <p>The easy half measured, and it is <strong>not close</strong>. The bar was set at the cost of
+  the signature circuit this project already shipped and later deleted — because a cost we
+  already shipped cannot be used to reject something that buys more. In-circuit settlement lands
+  <strong>seven times inside the time budget and thirteen times inside the memory budget</strong>.
+  Better: the measurement was pushed to four times the depth the design needs, enough for a tree
+  of 2<sup>120</sup> records, and it is still inside every budget. <strong>Hashing a path is not
+  what makes this hard.</strong> Every proof in that measurement was verified rather than merely
+  produced, which is what makes the numbers numbers.</p>
+
+  <p>The hard half — one proof for a whole history — got no proxy and no number, because its cost
+  cannot be inferred from the easy half's. It stays honestly labelled as unmeasured research.</p>
+
+  <p><em>Then the cheap half turned out not to buy what we thought. Keep reading.</em></p>
+
+  <h3 style="margin-top:2rem">We proposed two designs and killed both, and the second one deserved it more</h3>
+
+  <p>A measurement saying something is affordable is not the same as it being right, and we wrote
+  that sentence down ourselves before finding out how much we meant it.</p>
+
+  <p>The first proposal was to treat the affordable half of the accumulator as the big win —
+  the thing that would delete the two hardest proofs, remove the cap on how many times a coin can
+  change hands, and stop a payment's size from revealing how many owners it has had. An
+  adversarial review took it apart. <strong>Every one of those benefits belongs to the <em>other</em>
+  half</strong> —
+  the expensive, unmeasured one. And we had written that down ourselves, in the same file, sixteen
+  lines above the proposal. The split we had just been so pleased with had to be *re-read*, not
+  merely written once.</p>
+
+  <p>So we tried again with something better. Instead of summarising which coins are spent,
+  summarise the <em>payments themselves</em> — a value already published on Bitcoin, so the change
+  would cost zero extra bytes. It repaired every specific flaw the first attempt had. It looked
+  right for about an hour.</p>
+
+  <p>It dies to one sentence of our own specification: <strong>"anyone may publish anyone's
+  record."</strong> Nothing stops an attacker publishing a summary line for a payment they simply
+  made up. Their entry joins the summary honestly. They then prove — honestly — that their
+  invented coin belongs to it. <strong>The attack was already sitting in our test suite</strong>,
+  in a test written months ago for a different purpose, which publishes exactly that fabricated
+  record with the comment "so only linkage can refuse it."</p>
+
+  <p>The review found three more holes we had missed, and one of them points the wrong way
+  entirely: the design would have made <strong>griefing worse</strong>. Today an attacker who
+  wrecks your payment gains nothing — a demo asserts precisely that and passes. Under the proposal
+  they could wreck your payment <em>and mint themselves a coin in the same transaction</em>. We
+  would have converted an accepted nuisance into theft.</p>
+
+  <h3 style="margin-top:2rem">Two failures, one cause — so we wrote down the wall</h3>
+
+  <p>Both designs died the same death, and that is more useful than either death alone. Stated
+  plainly, and now recorded so nobody designs a third:</p>
+
+  <p><strong>Bitcoin does not check anything we do.</strong> That is the whole point of the
+  design — it is why no upgrade is needed and why the chain stores so little. But it means that
+  <em>publishing</em> something proves only that somebody paid a fee to publish it. It never proves
+  the thing was legitimate. So no summary of on-chain data — of spent coins, of payments, of
+  anything — can establish that a coin was validly created. Whatever you publish, anyone can
+  publish anything.</p>
+
+  <p>Zcash looks like a counterexample and explains the rule instead. It publishes its coins and a
+  short membership proof suffices — but only because <strong>Zcash's own network verifies every
+  transaction before it is allowed in.</strong> The list contains only real coins. Bitcoin verifies
+  nothing here. <em>The difference is not what gets published. It is who checks.</em></p>
+
+  <p>Which leaves exactly one mechanism: validity has to travel <em>with the coin</em>, and the
+  only way to keep that from growing forever is a proof that verifies the proof before it. That is
+  not a preference. It is the only door in the wall.</p>
+
+  <p>It also retires an excuse. We had been telling ourselves the byte budget was the obstacle —
+  that a stricter data limit stopped us putting more on chain. Two things are wrong with that. The
+  limit is a <em>relay policy proposal</em>, not a rule of Bitcoin, and a larger record is still a
+  perfectly valid transaction. And more importantly: <strong>more bytes would not have helped
+  anyway.</strong> The obstacle was never space. It was the absence of anyone checking.</p>
+
+  <h3 style="margin-top:2rem">The comparison we had already written, and had not read</h3>
+
+  <p>There is a table in our own specification comparing this project to its neighbours. One row
+  reads: <strong>Shielded CSV — receive cost O(1). Ultraviolet — O(history).</strong> We wrote that.
+  It has been true and public the whole time.</p>
+
+  <p>Shielded CSV splits the job in two. The chain answers <em>"is this coin already spent?"</em>
+  A proof carried with the coin answers <em>"did it come from a real history?"</em> We have the
+  first half, identical. We answer the second by walking the coin's entire past — which is the
+  whole of that O(1)-versus-O(history) difference, and which the wall above says cannot be replaced
+  by anything we publish.</p>
+
+  <p>So the thing to take from them is not a trick. It is the <em>separation</em>: stop asking one
+  mechanism to do both jobs. That is precisely the mistake both of today's dead proposals made.</p>
+
+  <p>We also found the same confusion shipped in three places on this site and in the spec,
+  including a sentence promising constant-size receive "until the accumulator lands." It does not
+  land there. All three are corrected. What we would <em>not</em> borrow: their spend check is a
+  classical signature, which is the one thing this project exists to avoid.</p>
+
+  <h3 style="margin-top:2rem">And then the real blocker, which is a config line</h3>
+
+  <p>If a proof that verifies another proof is the only door, the obvious question is why we have
+  not built it. The answer turned out to be one line of setup, and it has a deadline on it.</p>
+
+  <p>Verifying a proof means redoing its hashing. Our proof system currently hashes with
+  <strong>Keccak</strong> — a fine, fast choice for ordinary use, with hardware support. It is close
+  to the worst possible choice for hashing <em>inside</em> a proof, because it works on bits rather
+  than numbers. The money path was carefully built on a different hash, Poseidon2, chosen exactly
+  because it costs <strong>one row</strong> of a proof. The proof system underneath it was left on
+  Keccak.</p>
+
+  <p>The gap is not a percentage. A recursive check needs roughly two thousand hashes. With
+  Poseidon2 that is about two thousand rows — and today's measurements say a proof of that size
+  costs around a second. With Keccak it is on the order of a thousand times more. <strong>The
+  reason recursion looks impossible is not the mathematics. It is that we pointed the proof system
+  at the wrong hash.</strong></p>
+
+  <p>Swapping it is a configuration change, not new cryptography — the right hash is already a
+  dependency. But it changes every proof byte, which makes it a break. <strong>Right now that break
+  costs nothing</strong>: every coin in existence is play money, and we have already spent one such
+  break this week for a smaller reason. After an outside audit freezes the design, the same change
+  means re-auditing the proof system and invalidating real value.</p>
+
+  <p>Which reverses an ordering we had already settled. The plan put the audit first and recursion
+  much later. If recursion is ever wanted, <strong>the hash has to change before the freeze, not
+  after.</strong> We have not decided to build recursion — the honest position is still that it is
+  unmeasured, and today's arithmetic is arithmetic, which was wrong about the virtual machine by two
+  orders of magnitude. But the decision about the hash cannot wait for the decision about
+  recursion, and that is a genuinely uncomfortable thing to discover on the same day as two failed
+  designs.</p>
+
+  <h3 style="margin-top:2rem">We had proved everything except whether it works</h3>
+
+  <p>There are two kinds of thing you can prove about a payment system. <strong>Safety</strong>: no
+  money is created, stolen, or double-spent. <strong>Liveness</strong>: the payment can actually be
+  made. Safety says nothing bad happens; liveness says something good can.</p>
+
+  <p>Seven models cover this protocol, and five are about safety. Two are about liveness — can a
+  payment be made at all, and can a payment that already settled still be collected. On checking
+  which models had been proved *at all depths* rather than merely to a search depth of eight, the
+  answer was uncomfortable: <strong>all five safety models had been. Neither liveness model
+  had.</strong></p>
+
+  <p>Worse, the liveness model's own opening comment had been arguing for years-of-file-time that a
+  depth-limited check is the wrong tool here — that "no counterexample within eight moves" reports
+  what the search happened to try rather than what the protocol guarantees. It made that argument
+  from the day it was written. And every one of its checks ran at depth eight. <strong>The file
+  described an unbounded claim and the test suite made a bounded one</strong>, and nothing had
+  compared the two.</p>
+
+  <p>Both are now proved at all depths. The one about collecting a settled payment turned out to
+  need a single sentence: <em>the payment is always either already taken, or still re-sendable.</em>
+  Holding the bundle is a convenience; being able to ask for it again is what makes a dropped
+  message cost time instead of money. The property alone was not provable — the carrier may lose an
+  in-flight message at any moment, so "we're holding it" is not a fact that survives the next step —
+  but that one sentence does survive, and it implies what we wanted.</p>
+
+  <p>The one about making a payment cost more, and what it cost is the interesting part. The proof
+  needs the wallet's <strong>never-race-yourself rule</strong> written down as a fact about the
+  world rather than as a precaution the wallet takes. Without it, the proof has to consider a
+  situation where two transfers spend the same two coins and their settlement records land
+  <em>crossed</em> — the first coin's record naming the second transfer, the second's naming the
+  first. Neither can complete, both coins are consumed, nobody is paid. That is not a hypothetical
+  we invented for the proof: it is precisely the failure a different module of the same file was
+  built to demonstrate. So the conjunct that makes the proof go through is a real rule doing real
+  work, not bookkeeping.</p>
+
+  <p><strong>One module stays unproved, and we are not going to fix it.</strong> It is the module
+  that shows what happens when the never-race-yourself rule is absent — and with the rule gone, a
+  wallet can rebuild a transfer forever, so the model has a counter that grows without bound and no
+  proof of this kind can start. We could cap the counter and get a green check. We declined:
+  that module's entire job is to <em>produce</em> a failing run, and shrinking the space it searches
+  risks shrinking away the run it is there to find. It keeps its depth-eight result and a paragraph
+  explaining why that is the honest ceiling.</p>
+
+  <p>Two things caught mistakes along the way, and both are worth recording. First, the confident
+  claim that a four-boolean model "needs no domain constraints, so the proof is one line" —
+  <strong>false</strong>, and the prover said so precisely: it needs a value assigned for every
+  variable, and the one-line invariant mentioned only two of four. A small domain and no domain are
+  not the same thing. Second, the first attempt bounded a counter to "big enough for anything
+  reachable", and the prover immediately started at the top of that bound and stepped one past it.
+  <strong>A domain has to be closed under the rules, not merely large.</strong> Padding it would
+  never have worked — every bound has a bound-plus-one. What worked was relating the counter to the
+  thing it counts, so the same rule that stops the counter also stops the step.</p>
+
+  <p>And because a liveness property here is a list of alternatives — the payment survives if
+  <em>this</em> or <em>that</em> or <em>the other</em> — there is a way for such a proof to be
+  worthless: if the easiest alternative always held, the hard work would be provably idle. So four
+  more checks demand the opposite, each required to <strong>fail</strong>: they exhibit real
+  situations where the easy alternative does not save the payment. The sharpest one asks whether a
+  part-payment ever arrives while the payment is still incomplete. If that check ever stops failing,
+  the split-payment model has quietly become a model of one indivisible payment, and our claim that
+  a wallet holding two coins worth 1 can pay someone 2 would have nothing behind it at all.</p>
+
+  <h3 style="margin-top:2rem">Nine rules that nothing tested, and the excuse we had been using</h3>
+
+  <p>The circuit that decides whether a payment is valid is sixteen numbered rules. We test them
+  the brutal way: delete one, rebuild, and see whether anything fails. A rule whose deletion
+  nobody notices is a rule with no evidence behind it.</p>
+
+  <p><strong>Nine of the sixteen had no evidence.</strong> Not because they do nothing — because
+  of how they are wired. Each guards a slot that feeds the hash function, so corrupting that slot
+  breaks the hash check too. Delete the rule you meant to test and something else still complains,
+  so the test passes and tells you nothing. What we had instead was an <em>inheritance</em>
+  argument: these nine are character-for-character identical to nine rules in an older circuit
+  that had been tested properly, therefore they must be fine.</p>
+
+  <p>That is a reasonable thing to believe and it is not a test, and this journal has recorded it
+  as a known weakness twice. Today it is gone.</p>
+
+  <p>The fix was not more tests — it was a different instrument. Instead of producing a proof and
+  asking "did it fail?", the new check <strong>runs the rules directly and records each
+  individual check separately.</strong> A proof gives you one bit: valid or not. Running the rules
+  gives you a list of exactly which complained. And since the hash function's own checks always
+  come first, in a block whose size we measure rather than guess, "our rule objected, not the hash
+  covering for it" stops being a hope and becomes something you can look up. <strong>All nine
+  closed. The sweep now reads sixteen of sixteen.</strong></p>
+
+  <p>The same instrument settled a bigger question that a deletion test structurally cannot ask.
+  Deleting rules can never find a slot that <em>no rule mentions at all</em> — deleting nothing
+  changes nothing — and an unmentioned slot is a number the payer picks freely inside the circuit
+  that authorizes payments. That is the shape of a bug that mints money from nowhere, and it is the
+  first thing our own audit brief asks a reviewer to hunt for. Perturbing every slot on every row:
+  <strong>all 361 of 361 provoke a complaint.</strong> There is nothing free in there.</p>
+
+  <p>One more thing happened, and it is the better half of the story. The new probe's first version
+  had a case labelled as covering rules 5 and 9 which, through an off-by-six in a column
+  calculation, was actually poking rule 6. It passed. It would have kept passing forever.
+  <strong>What caught it was the deletion sweep</strong> — re-run, it killed seven of the nine and
+  left exactly 5 and 9 standing, which are the two the mislabelled case claimed. The two tools
+  check each other: the probe gives the sweep the precision it lacks, and the sweep tells the probe
+  when it is aiming at the wrong thing. Neither alone would have found this.</p>
+
+  <p>Two limits, because "zero survivors" invites the wrong conclusion. The probe moves
+  <strong>one number at a time</strong>, so a hole needing two coordinated changes is out of its
+  reach — and that is exactly what a careful attacker would build. And none of this says the
+  sixteen rules are <em>enough</em>, only that each one is doing work. Every cheap mechanical check
+  is now spent, which makes the professional audit more urgent rather than less.</p>
+
+  <h3 style="margin-top:2rem">We nearly hit our own target by accident</h3>
+
+  <p>This project keeps a table mapping every claim it makes to the model that could disprove it
+  and the code that implements it. A script counts how many claims are actually tied to running
+  code, and that count is the honesty metric — the whole point is that it cannot be talked up.</p>
+
+  <p>Today's plan set a target: at least 16 of 21. Two claims were rewritten to explain something
+  true and awkward — that they are half checkable and half not. "A stranger cannot work out which
+  coin is yours" has a *structural* part we can verify (nothing published contains the secret) and
+  a *hardness* part we cannot (that the hash function is not reversible). No test establishes the
+  second; a test asserting "the hash is not invertible" would be theatre.</p>
+
+  <p>Writing that explanation put the phrase <em>verified-code</em> inside the two rows. The
+  counting script matches on text. So both rows silently counted as fully verified, and the score
+  jumped from 14 to <strong>exactly 16</strong> — the target, hit by wording.</p>
+
+  <p>Nobody would have noticed. The number went up, the target was met, and every word in the
+  table was true. <strong>We put the number back down to 14</strong> and added two new labels for
+  what these rows actually are, counted on their own line, with a comment in the script explaining
+  why they must never be folded into the total. A hash-hardness assumption is not coverage and not
+  a gap; it is a third thing, and a table that files it under either is lying in the direction of
+  whoever reads the total.</p>
+
+  <p>Then, having decided to check the table row by row instead of trusting it, we found it had
+  rotted <strong>in both directions</strong>. One row claimed a test proving that <em>a payment
+  cannot be redirected to a different recipient</em> — that you cannot take someone's valid
+  payment and point it at yourself. <strong>No such test existed.</strong> It does now, and it is
+  exhaustive rather than illustrative: a statement is 56 numbers, so it alters every one of them
+  in turn, 104 forgeries, and requires every single one to be refused. Meanwhile a different row
+  was marked as untied while a test covering its exact claim had been passing for days. Documents
+  drift both ways, so from now on auditing the table is part of finishing a phase rather than an
+  assumption about it.</p>
+
+  <p>Two more claims graduated from "we have tests" to "checked in the build". The messenger
+  really cannot read what it carries: no marker and no 32-byte window of a payment appears
+  anywhere in the sealed bytes, and the same payment sealed twice comes out completely different,
+  so a re-send cannot be recognised. That check used to live only in a demo script, which runs on
+  one file and would not fail if somebody added a field in the clear. <strong>What the carrier
+  <em>does</em> learn is now asserted too</strong>: size. A bundle grows with the number of hands
+  a coin has passed through, so a carrier can estimate that. Better to have it written down as a
+  limit than discovered as a surprise.</p>
+
+  <p>The tally now: <strong>15 of 21 claims tied to running code, none merely modelled, none
+  merely tested.</strong> Of the remaining six, three are cryptographic assumptions stated as
+  such, and three were retired when the signature left. Every row accounted for.</p>
+
+  <h3 style="margin-top:2rem">The signature was gone; its scaffolding was not</h3>
+
+  <p>Yesterday the one-time signature left the money path. Today we looked at what it left
+  behind, and the answer was about four hundred lines of a signature scheme nothing signs with
+  — kept because the file header gave three reasons. Reading them properly, two were false and
+  the third was against a rule this project already has.</p>
+
+  <p>The reason that mattered: <strong>an asset's identifier was a signature's public key.</strong>
+  Creating one meant walking sixty-seven hash chains to their ends and compressing the tips,
+  something like two thousand permutations, to produce one number that identifies an asset.
+  Nothing ever signed with it. It is now a single hash, like every other value on the money
+  path.</p>
+
+  <p>Deleting it closed a defect we had not been looking for. The function that compressed those
+  chain tips was <strong>a second hash construction</strong> — no domain tag, no length binding —
+  and asset ids went through it, so it was live on a value the network agrees on. The file that
+  defines our one hash opens by claiming &ldquo;one primitive, one implementation, one place to
+  audit.&rdquo; That claim had been false for as long as both existed, and what kept the two
+  apart was an accident: one started from an all-zero state, and every real domain tag happens to
+  be non-zero. Nothing wrote that down and nothing tested it. As of today the claim is simply
+  true.</p>
+
+  <p>Every asset identifier created before today is invalid, because the construction changed.
+  A deliberate break, taken while every asset in existence is play money — which is the only
+  time such a break is cheap.</p>
+
+  <p>Then the same question, asked of the whole repository: <strong>what else describes
+  something that no longer exists?</strong> Rather a lot, and the worst of it was not
+  out-of-date prose but out-of-date <em>severity</em>. A file that reserves address slots still
+  said a collision discloses a key — total loss. There is no key any more; a collision now costs
+  one of two payments and links them publicly. Bad, and not that. A block of comments above the
+  live payment-proving functions still called them a prototype, &ldquo;deliberately not
+  consensus, nothing in the wallet calls these.&rdquo; Every clause false: the wallet calls them,
+  money moves on them, and all sixteen of their constraints are swept. A comment insisting a
+  consensus function is a toy is worse than no comment at all.</p>
+
+  <p>Two more were simply dangling. A module explained itself by citing a test that had been
+  deleted an hour earlier, and two documentation links pointed at a module that no longer
+  exists. Neither breaks a build; both are how a reader ends up believing something untrue.</p>
+
+  <p>So the rule we are adopting, and it is the reason this entry exists: <strong>the code and
+  the specification describe what is; this journal is where things that were tried and
+  abandoned are kept.</strong> A dead architecture narrated across forty files is not history,
+  it is forty chances to mistake it for the present.</p>
+
+  <h3 style="margin-top:2rem">A test that found something, and was wrong about what</h3>
+
+  <p>Two checks guard the circuit that authorises payments. One deletes a rule and asks whether
+  any test notices; the other moves a single number and asks the same. Both come back perfect —
+  seventeen of seventeen, three hundred and sixty-one of three hundred and sixty-one. Both
+  perturb exactly <strong>one</strong> thing.</p>
+
+  <p>An attacker does not move one thing at random. They solve for the cheapest lie that still
+  passes, and the cheapest lie is usually two numbers moving together so their effects cancel.
+  Nothing here could see that. So we wrote the check: for every pair of cells in the circuit,
+  move both, and require that something still objects. About a million combinations, two and a
+  half minutes.</p>
+
+  <p>It found <strong>378</strong>. That is the kind of number that stops a day.</p>
+
+  <p>It was wrong. Not the count — the <em>meaning</em>. The test claimed those pairs were each
+  caught alone and invisible together, which is the property that would matter, and it had never
+  actually checked the first half. Investigating one pair took a minute: neither cell was caught
+  alone either. They were not compensating pairs. They were simply <em>free</em>.</p>
+
+  <p><strong>A test that names a property has to test that property.</strong> Corrected, the real
+  answer is <strong>zero compensating pairs out of 1,029,978</strong>, which is a genuinely good
+  result and is the one we are keeping.</p>
+
+  <p>But the wrong answer had pointed at something real. Mapping every cell showed
+  <strong>28 numbers in each proof that no rule read at all</strong> — a prover could put anything
+  there. Not a way to steal money: a value nothing reads cannot make a false statement look true.
+  But this project has been here before. It once found 1,024 such numbers, wrote &ldquo;a column
+  nothing reads is a column a prover controls&rdquo; into the circuit as a comment, fixed it, and
+  filed the problem closed. Leaving 28 more would have made that closure a lie.</p>
+
+  <p>It was also an argument already in the file, applied to half of what it covered. The rule
+  directly above says padding rows must be blank &mdash; &ldquo;they would otherwise be 16 free
+  lanes per row&rdquo; &mdash; and the columns one block later were exactly the same thing. So the
+  circuit gained a seventeenth rule, the first one this project has ever got from a
+  <em>check</em> rather than from a design. Free numbers per proof: <strong>zero</strong>.</p>
+
+  <h3 style="margin-top:2rem">Bytes nobody chose</h3>
+
+  <p>Every way this project finds bugs replays an input a human picked &mdash; the tests, the
+  demos, the circuit probes. Two exceptions search, and both search a small box. Which means the
+  rate at which we find things has been limited by attention, and attention does not scale. Both
+  of the fail-open bugs found this week were found by <em>running the thing</em>, not by a check.</p>
+
+  <p>So: bytes nobody chose, in bulk, into the parsers a stranger can reach. The 64-byte stamps
+  that arrive off Bitcoin. The encrypted envelopes that arrive from a chat app. Roughly 200,000
+  hostile inputs, running in seconds.</p>
+
+  <p>Nothing broke. What it did do is turn an <em>argument</em> into a <em>check</em>: the register
+  claims that these decoders refuse a malformed number rather than quietly rounding it, and that
+  this is why the unmaintained encoder underneath cannot hurt us. If that were wrong, two different
+  byte strings would name one payment, and every rule that compares bytes would have a hole. It was
+  a paragraph. It is now seven thousand decoded records that each re-encode to exactly what they
+  came from, plus every value within four of the boundary, in every position.</p>
+
+  <p>One thing worth recording: the first version <strong>tested nothing</strong> and said so. Only
+  47% of random numbers are small enough to be valid, so a 16-number record built from random bytes
+  is valid about five times in a million &mdash; and in 60,000 tries, none were. Every input bounced
+  off the first check and the interesting assertion never ran. It reported success. The only reason
+  we know is that the test had been written to fail if it never got that far. A fuzzer that cannot
+  get past the front door passes loudly.</p>
+
+  <h3 style="margin-top:2rem">&ldquo;Proven at all depths&rdquo;, and what it does not mean</h3>
+
+  <p>The phrase appears 41 times in this repository. Exactly one of those said what it leaves
+  out.</p>
+
+  <p>It means an unbounded number of <em>steps</em>: no sequence of events, however long, breaks the
+  rule. That is the strong half and it is real. It does not mean an unbounded number of
+  <em>things</em>. Supply conservation is proven over a world of five coins and four wallets. The
+  wallet accepts coins that have passed through 256 hands.</p>
+
+  <p>Nothing here is false. It is <em>misreadable</em>, which is worse, because a reader sees
+  &ldquo;conservation proven at all depths&rdquo; and stops. The bug that made this project famous
+  to itself &mdash; money created from nothing &mdash; needed two wallets and a particular routing.
+  One needing three wallets would be invisible to these models <em>and</em> covered by a sentence
+  claiming it was proven.</p>
+
+  <p>So the specification now says which world, the models' page carries the table, and a check
+  refuses to let the bare phrase back into anything a stranger reads first. One model is exempt and
+  it is worth naming: the delivery model's entire state is four yes-or-no facts, sixteen situations
+  in total, so there the claim is unqualified because the world <em>is</em> the whole world.</p>
+
+  <h3 style="margin-top:2rem">&ldquo;Keccak? That&rsquo;s legacy, right?&rdquo;</h3>
+
+  <p>Asked in passing, after the prune. The answer is no, and finding that out took reading the
+  code rather than the documentation, which turned out to be the point.</p>
+
+  <p>There are <strong>two hashes</strong> in this system doing two different jobs. Poseidon2
+  hashes the money: coin commitments, spend markers, the 64-byte stamps that go to Bitcoin. That
+  is the one everything is written about, and it was chosen because one hash costs exactly one row
+  of the proof. Keccak hashes <em>the proof itself</em> — the tree that commits to the
+  computation, and the coin-flips that make the proof non-interactive. Every payment made today
+  uses both.</p>
+
+  <p>Then the check that mattered: <strong>Keccak appears in no specification, no assumption
+  table, and no auditor&rsquo;s brief.</strong> Only in this journal, in passing, a month ago. The
+  formal assumption list had six entries and named Poseidon2, FRI, Bitcoin&rsquo;s ordering, and
+  the message encryption — and one of those six, &ldquo;the proof is bound to its whole
+  statement,&rdquo; rests directly on Keccak without saying so.</p>
+
+  <p>Nothing is broken. Keccak is SHA-3: a hash, standardised, more reviewed than anything else
+  here — if we were ranking these by how nervous they should make you, it would come last. But
+  &ldquo;the thing you are trusting is fine&rdquo; and &ldquo;you knew you were trusting it&rdquo;
+  are different statements, and only the first was true. This project&rsquo;s one total forgery
+  came from a number that everybody assumed and nothing enforced. A primitive nobody lists is the
+  same shape.</p>
+
+  <p>So the assumption list is seven now, the specification has a section explaining that there
+  are two hashes and why, and the auditor&rsquo;s brief enumerates all four primitives instead of
+  gesturing at two — with a note that the fourth was missing until today, because <em>how</em> it
+  was missing is more useful to a reviewer than the fact. Nothing in our apparatus ever asks
+  &ldquo;which primitives are we trusting?&rdquo; The answer had to be recovered by reading a type
+  alias.</p>
+
+  <p>It also explains a cost we had been describing vaguely. Compressing a coin&rsquo;s whole
+  history into one proof means checking a proof <em>inside</em> another proof — and that means
+  redoing all that Keccak hashing in the circuit, where it costs about a thousand times what
+  Poseidon2 does. That is not a research problem, it is a configuration line. But changing it
+  changes what the network agrees on, so it happens before anything is frozen for audit, or it
+  waits a long time.</p>
+
+  <h3 style="margin-top:2rem">A number four documents agreed on and none of them checked</h3>
+
+  <p>Deleting the signature scheme deleted seven of its tests. The suite went from 224 to 217.
+  Four published places — the README, the specification, the auditor&rsquo;s brief, the benchmarks
+  page — went on saying 224, in the very session whose whole purpose was removing claims that had
+  stopped being true.</p>
+
+  <p>Fixing four numbers is nothing. The interesting part is that this is the <strong>third</strong>
+  time a count has drifted here, always the same way: work removes something, the documents keep
+  the old total, and nothing turns red. So the fix is not the numbers, it is a check that counts
+  the tests and fails the build if any document disagrees — written to fail first, against the
+  wrong numbers, so we know it can. It refuses two ways: if it counts an implausibly small total
+  it assumes <em>it</em> is broken rather than "correcting" the documents, and if it finds no
+  quoted count at all it fails too, because a check that has quietly stopped checking is worse
+  than no check.</p>
+
+  <p>While we were at it: <strong>31 citations pointing at specification chapters that no longer
+  exist.</strong> The thirteen numbered chapters were merged into one document months ago; code
+  comments across twenty files still cite <code>spec/02</code>, <code>spec/05</code>,
+  <code>spec/12</code>. All of them now name a section that exists.</p>
+
+  <h3 style="margin-top:2rem">And 234 megabytes of nothing</h3>
+
+  <p>This repository keeps exactly one commit, forever; every change rewrites it. That
+  convention has an unbilled cost nobody had looked at: <strong>234 MB of discarded drafts</strong>
+  still sitting in the repository's storage, against a current project of 2.4 MB across 147
+  files. The bulk turned out to be a 248 MB compiler binary swept in by an accidental
+  <code>node_modules</code> months ago, plus a demo wallet file saved at 46 MB four separate
+  times. After compacting and dropping the discarded drafts: <strong>1.6 MB.</strong> Same code,
+  same single commit, 146× smaller. Checking this is now part of finishing any phase.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-29</p>
+  <h2>The wallet read Bitcoin, and caught itself lying</h2>
+
+  <p>A phone cannot run a Bitcoin node, and receiving a payment safely needs one awkward lookup
+  per hop in the coin's history: <em>did this spend record win its race?</em> Asking a server that
+  question hands over precisely the two facts this design exists to hide — which coins are yours,
+  and when you are about to spend them.</p>
+
+  <p>So the phone does not ask. A <strong>mirror</strong> serves bulk pages of chain data by block
+  height, the phone replays them into its own local index, and every lookup is answered in
+  process. The mirror learns that somebody asked for a range of blocks, which is what any block
+  explorer already reveals. <strong>There is deliberately no endpoint that takes a coin
+  identifier</strong>, and the server says so in its own error message. The wallet app now reads
+  <strong>public signet</strong> this way, on a real iPhone, in a signed build.</p>
+
+  <p>What the mirror <em>is</em> trusted for is completeness, and nothing else — proofs are checked
+  on the phone, so a lying mirror cannot make an invalid payment valid. But a mirror that
+  <em>omits</em> a record can make a double-spend look unopposed. Pages are therefore
+  content-addressed, a client refuses a feed with a hole in it by name, and running two mirrors
+  from different operators turns the assumption into a comparison.</p>
+
+  <h3 style="margin-top:2rem">Then it failed open, on the first real run</h3>
+
+  <p>None of that saved us. Pointed at real signet, the whole arrangement <strong>answered "no
+  such record exists" for a coin that was demonstrably on chain</strong> — the single most
+  dangerous wrong answer available, because it is what a double-spender needs everybody to
+  believe.</p>
+
+  <p>The chain of causes is worth spelling out because every link looked reasonable. A wallet that
+  has only scanned recent blocks records a floor below which it cannot answer. Loading such an
+  index while claiming to start from zero correctly discards it — it cannot speak for the early
+  blocks. The mirror did exactly that, and was left holding an <strong>empty</strong> index. An
+  empty index reports its highest scanned block as zero. And the client's "am I caught up?" test
+  was <em>covered ≥ tip</em>, which for an empty view is <strong>0 ≥ 0 — true.</strong> A view
+  containing nothing certified itself as complete, and every lookup against it came back
+  "nothing found".</p>
+
+  <p>Fixed in three places rather than one: the mirror serves its own floor, the client adopts
+  that floor and bounds its answers by it, and a view now has to have seen at least one block
+  before it may call itself caught up. Two regression tests hold it. <strong>No test found
+  this</strong> — running the thing against a real chain did, which is why every phase from here
+  ships a demo that exercises the new piece against a real node.</p>
+
+  <p>A second fail-open in the same family turned up immediately after: the scan command was
+  validating payments against a <em>cold</em> index, having never refreshed it. And a third
+  problem was hiding behind an ignored error — a discarded return value swallowed "block not
+  found on disk", which turned out to be a leftover Bitcoin process still listening on a fixed
+  port with its data directory deleted underneath it. Tests now use a random port per run and
+  check the node's identity before trusting it.</p>
+
+  <h3 style="margin-top:2rem">Proofs about the code, not only about the design</h3>
+
+  <p>Formal models describe a design. They cannot tell you the software matches. Two additions
+  attack that gap from opposite ends.</p>
+
+  <p><strong>Eight machine proofs now run over real production functions</strong> — not
+  re-implementations written for the proof. They cover the arithmetic that money depends on: every
+  possible 64-bit amount survives conversion into the circuit's number format and back; the
+  conversion accepts exactly the valid range and refuses everything else; addition is exact or
+  refuses rather than silently wrapping; a transfer's totals cannot overflow; and the record and
+  issuance encodings round-trip with exactly one valid byte form each. These are proofs over all
+  inputs, not tests over chosen ones, and they run in the normal build.</p>
+
+  <p><strong>And five frozen counterexample traces now replay against real code.</strong> When a
+  model finds an attack, that attack is saved and re-run against the actual implementation — so
+  the rule the model proves and the rule the software enforces are demonstrably the same rule.
+  Each tie is also shown to <em>bite</em>: weaken the real rule and the replay fails. Coverage of
+  the project's claims went from 5 tied to code to 11, with none left in the embarrassing state of
+  being proved in a model and absent from the software.</p>
+
+  <p>One more owed piece landed: a <strong>front-running harness</strong>, seven self-checking
+  steps, demonstrating what happens when two spends of the same coin race to the chain — and that
+  the loser's payee is told the truth rather than shown a balance that later evaporates.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-29</p>
+  <h2>The signature left the money path</h2>
+
+  <p>Two days ago this journal recorded a rule, written down before measuring: the one-time
+  signature inside the payment circuit survives only if it proves more than 2× faster than doing
+  without it. It measured 6.7× <em>slower</em>. Today the migration that rule demanded is done.
+  <strong>No signature is made anywhere on the money path.</strong> Spending a coin now means
+  proving, inside the payment proof itself, that you know the secret behind the coin's committed
+  spend anchor — a check the circuit was already doing next to the signature. The signature was
+  a second lock on a door that had two, and the slower lock is gone.</p>
+
+  <p>What deleting it bought, beyond speed: the sharpest operational hazard in the system went
+  with it. Signing twice under a one-time key discloses the key — so losing wallet state at the
+  wrong moment could cost a coin, and a sign-log, a replay-instead-of-resign discipline, and
+  fund-critical slot bookkeeping all existed to prevent that. Proving twice reveals nothing.
+  All of that machinery is demoted from protecting funds to caching work, and the circuit that
+  verified the signature — about 4,700 lines, most of the proving time, nearly all of the
+  1,024-row table — is deleted, not retired-but-kept. One circuit remains.</p>
+
+  <p>The note itself got simpler for the same reason. Each coin used to commit to an owner
+  public key that the anchor check made redundant: the key authorized nothing the anchor did not
+  already authorize. It is dropped. A note is now 28 field elements instead of 36, and the whole
+  payment — opening the input coin, deriving the spend marker, opening both outputs, balancing
+  the amounts, and the authorization itself — fits in a <strong>16-row table</strong> where the
+  signature version needed 1,024. A complete hiding payment proves in about <strong>0.02 seconds
+  on 5 MB</strong>, an order of magnitude faster and ~23× less memory than the circuit it
+  replaced.</p>
+
+  <p>The honest cost, and it is not small: <strong>zero-knowledge is now load-bearing for
+  funds.</strong> The spending secret enters every payment proof as witness data, so a proof
+  system that leaked its witness would leak the thing that moves the money. Before, hiding
+  protected privacy; now it protects the coin. This is contained the same way the old hazard
+  was: anchors are one-time per note, so the blast radius of any single leak is one note. And
+  the assumption base did not grow — the proof system and the hashes were already load-bearing;
+  what changed is that a second, independent lock no longer sits behind them.</p>
+
+  <p>How we convinced ourselves the rewrite is the same circuit, not a similar one: the mutation
+  sweep. Before the change, we deleted each rule of the old circuit in turn and recorded which
+  deletions the tests catch. After the change, the same sweep on the new circuit catches the
+  identical pattern — same rules defended, same rules leaning on the shared hashing machinery
+  that a structural test does not yet isolate. That inherited gap is stated on the
+  <a href="benchmarks.html">benchmarks page</a> rather than papered over: 7 of 16 rules are
+  pinned by a test that fails if they vanish, and the other nine are byte-identical to
+  swept-clean rules of the deleted circuit. <em>(That inheritance argument stood for one day.
+  On 2026-07-30 all nine were closed directly and the sweep reads 16 of 16 — see the entry
+  above.)</em> Outside review still owns the question our tests
+  cannot answer.</p>
+
+  <p>Two withdrawals, recorded as such. The iPhone numbers this site quoted — a third of a
+  second per private payment — were measured on the deleted circuit, so they are off the
+  benchmarks page until the signed app re-measures them on the real one; the laptop got ten
+  times faster, so the phone's budget only improves, but a number we have not measured is not a
+  number. And every address and test asset minted before today is invalid: the note format
+  changed shape, and this was the one asset-invalidating break the campaign budgeted for,
+  spent while every coin in existence is play money.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-28</p>
+  <h2>A payment crossed Signal's real servers</h2>
+
+  <p>Until today, "a payment rides Signal" carried an asterisk: the end-to-end test ran through
+  our own relay, because we had not put two real accounts on Signal's actual service. Today the
+  asterisk came off. One wallet issued an asset on public signet, paid 300 units to another, and
+  the sealed bundle — 214&thinsp;KB, mostly zero-knowledge proof — travelled through
+  <strong>Signal's production infrastructure</strong> between two real accounts, arriving in
+  under a second. The recipient's phone shows it as an ordinary file attachment, because to
+  Signal that is all it is.</p>
+
+  <p><img src="img/signal-uvb-received.png" alt="The sealed bundle in the recipient's Signal app"
+  style="max-width:100%;border-radius:8px" loading="lazy"></p>
+
+  <p>The receiving wallet's first scan fetched it, verified the proof, found the issuance and the
+  spend marker confirmed on signet, and accepted. Nothing was retried and nothing was nudged. The
+  supply check ran off the recipient's own chain view: 1,000 issued, every record attested.</p>
+
+  <p>One thing went wrong, and it is worth recording because it looked exactly like a transport
+  bug. The receiving daemon sat connected for half an hour while the phone showed the message
+  delivered — because it had been started with a flag that quiets received messages on standard
+  output, and in that mode it was not consuming its queue at all. Restarting it without the flag
+  flushed everything instantly. The lesson is now in the runbook: a receiving daemon that logs
+  envelopes is receiving; one that logs nothing is not a daemon with nothing to receive.</p>
+
+  <p>The run is recorded in <code>demo/signal.md</code>'s ledger — which also lost its "Commit"
+  column today, for the same reason the other two ledgers did: this repository keeps one
+  always-amended commit, so a commit hash can never resolve. A content hash of the transport
+  sources stands in its place.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-28</p>
+  <h2>You can now count the coins</h2>
+
+  <p>The question we get more than any other is how anyone knows how many coins exist. Until this
+  week the honest answer was: you ask the issuer, and you believe them. That is the answer every
+  token on every chain gives, and it is not a good one.</p>
+
+  <p>Now creating coins costs a confirmed Bitcoin transaction. Issuing writes a small record into
+  the blockchain that states the amount in the open, and a wallet <strong>refuses</strong> any coin
+  whose creation is not there. So an issuer cannot mint quietly on the side: unpublished coins are
+  worthless to everybody, including them. Adding up an asset's records gives you the total, and you
+  get it from Bitcoin rather than from us.</p>
+
+  <p>Getting from "roughly" to "exactly" took a second attempt. The first version of the record
+  stored a <em>fingerprint</em> of the details rather than the details. A fingerprint only works
+  backwards: you can confirm one you already know, but you cannot look at the blockchain and ask
+  which records belong to a given asset. So the only number anyone could compute was the total
+  across every asset and every stranger — a ceiling, not an answer. Writing the asset's name into
+  the record in plain sight fixed it, and cost 32 bytes.</p>
+
+  <h3 style="margin-top:2rem">A checked model, and code that didn't match it</h3>
+
+  <p>Between those two versions we shipped a bug that is worth describing, because the way it
+  survived is the interesting part.</p>
+
+  <p>Before writing the rule we modelled it, using software that explores every possible sequence of
+  events looking for a way to break a stated property. The model said: a coin counts only if
+  <em>its own</em> creation is on the blockchain. Good rule. Then we wrote the code, and the code
+  compared <em>amounts</em>.</p>
+
+  <p>Those sound alike and are not. An attacker waits for somebody honest to publish a creation of
+  1,000, invents their own asset that also creates 1,000, and hands out the paperwork. Every
+  wallet's check asks "is there a confirmed creation of 1,000?" and the honest person's record
+  answers yes. Free money, on round numbers that collide by accident.</p>
+
+  <p>No amount of model-checking would ever have found that, and it is worth being blunt about why:
+  <strong>the model does not know what the code says.</strong> A verified model plus a sloppy
+  translation of it is an unverified system, and the gap between them is invisible from either
+  side. We found it by reading the two next to each other. The weak rule is now a module in the
+  model of its own, so if anyone ever writes it again, the checks fail.</p>
+
+  <h3 style="margin-top:2rem">The tool that nearly shipped a hole</h3>
+
+  <p>We have a script that measures how good our tests are by deleting one safety rule from the
+  proof system at a time and checking that something fails. It puts the rule back afterwards.</p>
+
+  <p>A run got killed by a timeout partway through. It did not put the rule back — the cleanup
+  only ran for one kind of interruption, and this was the other kind. So a safety rule sat
+  commented out in the working files. Then the next run started by copying those files over its
+  own backups, which destroyed the only good copy, and reported a result that looked completely
+  ordinary: one measurement fewer, one problem fewer. Both numbers had moved in the direction that
+  looks like progress.</p>
+
+  <p>This repository keeps exactly one commit, rewritten each time. There is no earlier version to
+  recover. A routine "commit everything" would have published a proof system with a rule missing
+  and erased the copy that had it.</p>
+
+  <p>Fixed in the order that matters: the tool now <strong>refuses to start</strong> if the files
+  are already damaged — that is the check that survives even being killed outright — and it catches
+  the interruptions it can, verifies its own cleanup, and says so out loud. The build now fails on
+  the marker itself. The bad measurement stays in our records, labelled void, rather than being
+  quietly replaced.</p>
+
+  <h3 style="margin-top:2rem">And a checklist item that had never run</h3>
+
+  <p>Same day, same category. We keep a runbook that checks every property of every model — the
+  slow, thorough version, run by hand because it takes hours. Running it in full after this work,
+  it reported a failure in a model we had not touched.</p>
+
+  <p>The runbook was asking for a scenario that <strong>no longer exists</strong>. It had been
+  renamed, the line naming the old one was never updated, and nothing complained, because the only
+  thing that would have complained is the run we were doing for the first time in a while. A dead
+  line is worse than a missing one: the file reads as though the case is covered.</p>
+
+  <p>One thing worked exactly as intended. The runbook treats a crash as a <em>failure</em> rather
+  than a pass — we wrote that rule earlier for a different reason — so a scenario that could not be
+  found came back red instead of being quietly skipped. Without it the line would have looked fine
+  forever. The seconds-long check that runs on every change now verifies the names too, so the next
+  one fails immediately rather than waiting for someone to spend an afternoon.</p>
+
+  <h3 style="margin-top:2rem">Deleting the channels — and what it bought</h3>
+
+  <p>We had a design for instant payments between people who transact regularly: a channel, where
+  two parties keep signing newer versions of a shared balance and only the latest one counts. It
+  was specified in detail and it had the largest formal model in the project — twenty-seven of our
+  fifty-nine machine-checked properties, more than the money path itself.</p>
+
+  <p>None of it was built. It had sat under the label "designed, modelled, not built" for months,
+  and that label is how unwritten code gets counted as progress. We deleted the specification and
+  the model.</p>
+
+  <p><strong>The suite went from hours to five minutes.</strong> Channels was not merely the
+  largest model, it was the slow one — a single deadlock check took forty-five minutes, and one
+  depth further never finished at all. That is why our thorough verification run was a manual
+  afternoon nobody did often. And because it could not be checked as deeply as everything else,
+  it was also the only part of the suite running at a shallower bound: every remaining check now
+  runs at the full depth, where before a third of them did not.</p>
+
+  <p>The thing we actually gained is not speed. A check that takes an afternoon runs when someone
+  remembers; a check that takes five minutes can run on every single change, automatically,
+  forever. We had been carrying a large body of careful work about software that does not exist,
+  and paying for it by verifying the software that does exist less often. Deleting it made the
+  remaining verification both faster and stronger, which is not a trade — it is what happens when
+  you stop maintaining the wrong thing.</p>
+
+  <p>The reasoning is written down and the design is in version history. If we build instant
+  settlement later it gets a fresh model, written against code, and a fresh review gate. Until
+  then we would rather say plainly that we do not have it.</p>
+
+  <h3 style="margin-top:2rem">Retiring the BIP-110 page</h3>
+
+  <p>We used to keep a page arguing, rule by rule, that Ultraviolet complies with BIP-110 — a
+  proposal to tighten how much data a Bitcoin transaction may carry. The argument was good and we
+  are not withdrawing it: our data is monetary, it is prunable, it never enters the set of unspent
+  outputs that every node must keep forever, and one payment is a 64-byte push.</p>
+
+  <p>We have retired the page anyway, for a reason worth stating. It made a <em>precision</em>
+  argument — this many bytes, this far under the limit — and precision arguments rot when the
+  protocol moves. The new creation record is 76 bytes of data in a 79-byte script, against an
+  83-byte limit. Still compliant. But the page's headline was "we pass all of it, today", and
+  keeping that true would mean re-deriving the arithmetic every time anything changes, on a page
+  about somebody else's draft proposal that may never be adopted.</p>
+
+  <p>We would rather have one fewer page that could quietly become wrong. The byte budget now lives
+  next to the code that produces it, where a test asserts the exact script size and the remaining
+  margin — four bytes — and fails if either moves. That is a better home for a number than a
+  webpage. We gave the argument a good shot; it is in this entry now.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-27</p>
+  <h2>Two notes of one can finally pay two</h2>
+
+  <p>A wallet holding two coins worth 1 each, owing 2, could not pay. At all. Not slowly, not
+  awkwardly — the command refused. A payment spends exactly one coin, so if no single coin covers
+  the amount, there was no payment to make.</p>
+
+  <p>It now sends two payments that add up. That sounds obvious, and the reason it took thought
+  is that combining coins <em>inside</em> one payment is genuinely dangerous: a machine-checked
+  model of this protocol shows two coins spent together can deadlock, with both consumed and
+  nobody paid. Sending them as separate payments sidesteps that entirely, because each one
+  either lands or does not, independently.</p>
+
+  <p>We did not want to close this on the strength of that paragraph. The model directory still
+  contained a module proving the payment impossible, so we added one for what the wallet
+  actually does — and checked it. The new one holds where the old one fails. The honest cost:
+  each coin means another Bitcoin transaction and another fee, and a payment can now arrive
+  <em>partly</em>, which is a new thing to reason about. Better than the alternative, where one
+  interfering transaction consumes every coin at once.</p>
+
+  <h3 style="margin-top:2rem">A fix that wasn't running</h3>
+
+  <p>Yesterday we wrote that small payments were safe at one confirmation because the wallet
+  re-checks after the blockchain reorganises. Today we made that true.</p>
+
+  <p>The re-check was real, but it read from an index that never forgot anything, had no idea a
+  reorganisation had happened, and reported a withdrawn payment as getting <em>safer</em> with
+  age. The index now notices — with a single question to the node, because a block's identity
+  commits to its entire history, so if the latest one still matches, nothing underneath it
+  changed.</p>
+
+  <p><strong>Then we pointed a real Bitcoin node at it, and it failed.</strong> The wallet
+  detected the reorganisation and still kept a coin whose payment had vanished. The detection
+  happens lazily, during a lookup — so checking "has anything changed?" before doing any lookup
+  read yesterday's answer. The wallet was permanently one command behind the chain. That is not
+  a bug any unit test we wrote would have found, because every unit test asks the question after
+  something has already looked.</p>
+
+  <p>The test now covers both endings: a payment that gets re-included in the new chain, where
+  the coin must survive — a wallet that panicked and quarantined a perfectly good coin would be
+  its own kind of bug — and a payment lost for good, where the coin must be frozen. And we
+  deliberately broke the fix again afterwards to watch the test fail, because a test nobody has
+  seen fail is not evidence of anything.</p>
+
+  <p class="muted">Getting a real node to lose a transaction on purpose took three tries and
+  taught us three things worth writing down: regenerating a block on a fork produces a
+  byte-identical block that the node rejects as a duplicate; the saved memory pool is written on
+  the shutdown <em>before</em> you disable it; and the node's own wallet helpfully rebroadcasts
+  the very transaction you were trying to make disappear.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-27</p>
+  <h2>Looking for one bug's relatives</h2>
+
+  <p>A forgery was found in this project's proof system earlier today. The interesting thing
+  about it was not the hole itself but its shape: the rules were all correct, and the bug lived
+  in something the rules quietly assumed and nothing checked. So we went looking for relatives,
+  and found four.</p>
+
+  <p><strong>The worst was the same bug one layer out.</strong> A proof is checked against a set
+  of security parameters — how much redundancy, how many spot-checks. Those live in a
+  configuration object, and every function that checks a proof simply accepted whichever
+  configuration it was handed. Anyone building on this could have passed one with the security
+  turned down to almost nothing, and every check would have passed happily. Nothing in our own
+  code ever did that, which is exactly the problem — it was protected by good manners, and so
+  was the trace height that got forged. The configuration is now wrapped in a type that only
+  this library can create, so a weakened one is a compile error. We tested that by writing a
+  program that tries it; it doesn't build.</p>
+
+  <p><strong>One check evaporated in release builds.</strong> The number of public values a
+  proof carries was verified only in debug mode, and a mismatch would have crashed rather than
+  rejected. It's a real check now. That makes four separate obligations the verifying code
+  carries outside the mathematics, and anyone reimplementing it has to reproduce all four.</p>
+
+  <p><strong>And nothing tied a proof to this protocol at all.</strong> Fixed, though with a
+  caveat we wrote down rather than glossed: it binds proofs to Ultraviolet, but the two
+  different circuits are still told apart by their shape rather than by a label.</p>
+
+  <h3 style="margin-top:2rem">The pleasant surprise</h3>
+
+  <p>A proof's table has leftover rows at the end, and an audit listed six kinds of cell there
+  as unconstrained — free for a prover to fill with anything. We wrote a test to fill them with
+  garbage and confirm it couldn't matter.</p>
+
+  <p>The test failed, and the reason was good news: five of the six are not free after all. Only
+  one genuinely is. The leftover rows are considerably more locked down than anyone believed.
+  The test now asserts what is actually true, and comes with a companion that deliberately
+  breaks something to prove the test can still detect a problem — because a test that cannot
+  fail tells you nothing, which we learned the hard way earlier today.</p>
+
+  <h3 style="margin-top:2rem">Two live bugs, found by asking what the list got wrong</h3>
+
+  <p><strong>Junk mail was immortal.</strong> When a payment was rejected, its file was left
+  sitting in the inbox — so every future check re-examined it, forever. One piece of junk from a
+  stranger cost real work on every scan for the rest of time. Now rejections are sorted: a
+  payment that simply hasn't settled yet is kept, and one that can never become valid is thrown
+  away. There is also, at last, a limit on how long a payment's history can be, so a stranger
+  can't hand you an arbitrarily large amount of work.</p>
+
+  <p><strong>And a safety fix turned out not to be running.</strong> Our own notes said small
+  payments were safe at one confirmation because the wallet re-checks after the blockchain
+  reorganises. It does — against a test double. Against the real Bitcoin backend the re-check
+  reads an index that never forgets anything, has no idea a reorganisation happened, and reports
+  a withdrawn payment as getting <em>safer</em> with age. So the mitigation we were relying on
+  did not exist where it mattered. Small payments now wait for three confirmations, which is the
+  other repair the mathematics proved and the one that actually works. It costs a few minutes on
+  small payments. The proper fix is written up as open work rather than assumed done.</p>
+
+  <p class="muted">Also: a review of how data is encoded, which we owed. The verdict is that
+  nothing dangerous depends on it, and the reason is worth stating because someone could easily
+  break it later — everything that matters is hashed from numbers, never from encoded bytes. A
+  future feature that hashes an encoded record instead would silently make a whole class of
+  problem live. That is now written down as an invariant rather than left as a happy accident.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-27</p>
+  <h2>We nearly published numbers for software we'd already replaced</h2>
+
+  <p>This morning we measured how long a payment takes to prove, put the figures on this site
+  and in four specification files, and moved on. Then, hours later, we fixed a privacy bug by
+  replacing the random-number generator at the heart of the proving code with a proper
+  cryptographic one — and did not re-measure. For most of a day, every performance number we
+  published described software that no longer existed.</p>
+
+  <p>It was not a small part of the code to change. Making a payment private involves
+  generating something like half a million random numbers, and we swapped the fast, insecure
+  generator for a slower, secure one. There was every reason to expect that to cost something.</p>
+
+  <p><strong>Re-measured on the phone: it cost nothing detectable.</strong> A private payment
+  takes 0.28–0.31 seconds on an iPhone 17 Pro Max, against the 0.26–0.31 published. The
+  non-private variant, which does not use that generator at all, drifted by exactly the same
+  small amount — which is the tell that the difference is a warm phone and a busy laptop, not
+  the change. Security was free here because the expensive part of proving is arithmetic and
+  hashing, not generating random numbers.</p>
+
+  <h3 style="margin-top:2rem">And then we tried it on a cheap phone</h3>
+
+  <p>"A flagship can do it" is a weaker claim than it sounds, so we borrowed the other end of
+  the range: an <strong>iPhone 16e</strong>, the cheapest iPhone Apple currently sells. A private
+  payment takes <strong>0.35 seconds</strong> there, against 0.31 on the flagship — about a
+  sixth slower, across a gap of several hundred pounds.</p>
+
+  <p>The memory result is the more interesting one, and it nearly fooled us. The cheap phone
+  appears to need 25 MB more. It does not: the prover's own share is 261 MB against the
+  flagship's 259 MB, a difference of two. The entire gap is how much memory iOS and the app
+  shell were already using before any proving started — 43 MB on one, 19 MB on the other. Had we
+  quoted the headline figure alone, we would have published a hardware difference that does not
+  exist.</p>
+
+  <p>The numbers survived. The process did not deserve to get away with it, so we have added a
+  check that runs on every build: proof sizes are pinned to the byte, and the cost of a private
+  payment relative to a plain one is bounded. That second one is deliberately a <em>ratio</em>
+  rather than a stopwatch reading — a ratio cancels out how fast the machine happens to be, so
+  it can be strict without failing at random. We tested that the check actually fails when fed a
+  regression, because a guard nobody has seen fail is not a guard.</p>
+
+  <h3 style="margin-top:2rem">And the repository was 99.6% junk</h3>
+
+  <p>A fair question arrived while this was going on: why does every commit touch millions of
+  lines? Because it did. The demo script writes its output — wallets, payments, proofs — into a
+  folder that was never added to the ignore list, so every run committed all of it. The tracked
+  project was <strong>3,649,694 lines</strong>, of which about 3.6 million were generated files
+  nobody reads.</p>
+
+  <p>The reason it was so enormous turned out to be a real bug rather than mere clutter.
+  Wallets were being written as indented, human-readable text — and a wallet contains the full
+  proof history of every coin it holds. Each individual number in each proof got its own line.
+  One demo wallet was <strong>46 megabytes across 2.77 million lines</strong>. That is not just
+  a repository problem: real wallets used the same code, so anyone's wallet would have bloated
+  the same way, on a phone, where it matters most. Storing it as binary instead took that wallet
+  from 46 MB to 2.6 MB — <strong>eighteen times smaller</strong> — and encrypted wallets were
+  paying the same cost, because the bloated version was what got encrypted.</p>
+
+  <p>The project is now 20,385 tracked lines and a fresh download is 1.5 MB. This is the second
+  bug of exactly this shape found today; the first was payments being stored as hexadecimal
+  inside text, which doubled them. Both were invisible because both were merely wasteful rather
+  than wrong.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-27</p>
+  <h2>A payment rode Signal</h2>
+
+  <p>A real Ultraviolet payment — proved, settled, and worth something — travelled between two
+  wallets over a genuine Signal Protocol session, and the receiving wallet accepted it.</p>
+
+  <p>"Genuine" is the load-bearing word. This uses <strong>Signal's own code</strong>, taken
+  from Signal's repository at a release tag. There is a package on the Rust package index with
+  a Signal-sounding name that is <em>not</em> Signal's; using it while saying "real Signal"
+  would have been false, so we checked. The handshake is the real one, including its
+  post-quantum step, and so is the ratchet that follows.</p>
+
+  <p>The payment is wrapped twice, by different cryptography, for different reasons. Our own
+  envelope makes it unreadable to whoever carries it, and would be there if it travelled by
+  post. Signal's layer makes it look like every other Signal message. Neither is redundant:
+  drop ours and the person running the server is someone you have to trust; drop Signal's and
+  the world can see who is talking to whom. <strong>The money never inherits its privacy from
+  the messenger.</strong></p>
+
+  <p>The test runs a deliberately stupid relay in place of a server, and then interrogates it.
+  It saw 216,147 bytes addressed to a phone number. The bytes do not compress, which is what
+  ciphertext looks like, and contain no trace of the payment inside them. That is the claim
+  worth having: <em>a carrier routes something it cannot read and cannot identify as money.</em></p>
+
+  <h3 style="margin-top:2rem">What we could not do, and why we are saying so</h3>
+
+  <p>We have not run this on Signal's actual network, and cannot: Signal blocks third-party
+  clients. The honest version has always been "run your own server", so we tried to.</p>
+
+  <p>Signal's server software builds — we compiled all of it. Running it is another matter.
+  There is exactly one documented way to start it, tucked inside a test class, and it comes
+  with its own warning that most features won't work. We got it as far as starting the
+  databases it needs before it gave up on a networking detail.</p>
+
+  <p>We stopped there on purpose rather than pushing through, because the mode that starts is
+  the mode with all the interesting parts switched off. A real one needs a database most people
+  have never installed, several clusters, and credentials from Apple, Google, a payments
+  processor, an app store, and — the one that really stops you — a separate service for sending
+  verification texts, which has no public implementation. Signal says plainly that they cannot
+  help you run it elsewhere. They are not being unhelpful; it is simply not built to be
+  self-hosted.</p>
+
+  <p>So one claim in our spec is still only an argument: that carrying payments needs
+  <em>no change to a Signal server at all</em>. We believe it, the design gives it a hard
+  technical floor, and we have not demonstrated it. It is filed as open rather than quietly
+  rounded up to done.</p>
+
+  <p class="muted">Also shipped today: the sealed payment on disk was being stored as
+  hexadecimal inside JSON, which doubled every byte for no benefit. It is raw bytes now —
+  428,923 bytes became 214,460 for the same payment. That matters more than it sounds, because
+  a coin's proof grows with its history, and this is the thing a phone has to upload.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-27</p>
+  <h2>We asked four strangers to break the circuit. One of them did.</h2>
+
+  <p>The forgery was total. It cost about twenty milliseconds, required no key, no seed and
+  no secret of any kind, and it let an attacker create money that never existed. It is
+  fixed, it is covered by two tests that will fail loudly if it ever comes back, and no
+  Ultraviolet has ever held real value — signet coins are play money and that is the entire
+  point of testing there. But it was real, and this is the entry that says so.</p>
+
+  <h3 style="margin-top:2rem">What was wrong</h3>
+
+  <p>A proof of a payment is a table of numbers. Ours is 1,024 rows tall, and the rules that
+  check a payment are written as arithmetic over that table. Some of those rules only wake up
+  near the bottom of it — the row where the signature check finishes is what switches on
+  everything that examines the money: does the coin exist, does its spend-marker follow from
+  it, do the amounts add up, does the spender hold the key.</p>
+
+  <p><strong>The proof got to declare its own height, and nobody checked it.</strong> Hand in
+  a table eight rows tall and the wake-up row never arrives. Every rule about the money stays
+  asleep. The proof is still a perfectly valid proof — of nothing whatsoever. Meanwhile the
+  receiving wallet carefully works out what the payment claims and hands those numbers to a
+  checker that no longer reads them.</p>
+
+  <p>One reviewer built exactly that: eight rows of zeros, a coin they did not own, an
+  invented spend-marker, and an output paying themselves more than the asset's entire
+  issuance. Another independently walked it all the way up the stack — publishing the record
+  to a chain, waiting for it to confirm, and handing the result to the receiving wallet,
+  which said yes.</p>
+
+  <h3 style="margin-top:2rem">Why our own tests could never have caught it</h3>
+
+  <p>Every test we had generates an honest payment and checks it is accepted, or breaks one
+  thing and checks it is rejected. Both only ever explore payments we thought of. This bug
+  was not a mistake inside a rule — the rules are fine. It was a mistake in something the
+  rules quietly leaned on, which no rule stated and no line of code enforced. Our audit brief
+  had literally written down "1,024 rows" as a fact about the system. It was an assumption
+  wearing a fact's clothing.</p>
+
+  <p>The fix is three lines: the height a proof declares is now part of what it must prove,
+  and anything else is refused before the proof is even examined. That makes three separate
+  obligations the checking code carries outside the arithmetic — and this third one is the
+  easiest to lose, because nothing inside the proof hints that it exists.</p>
+
+  <h3 style="margin-top:2rem">The fix had its own bug, and that is the real lesson</h3>
+
+  <p>The first version rejected the forgery correctly. It also rejected <em>every honest
+  private payment</em>, because a privacy-preserving proof legitimately uses a slightly taller
+  table than a plain one, and the check compared against the plain number. It passed 43 of
+  44 tests and looked completely fine. One of the reviewers read it and spotted the
+  off-by-one within the hour.</p>
+
+  <p>That is the argument for outside review in miniature — and we would rather show it than
+  claim it. Both the break and the fix's own bug were found by adversarial reading. Neither
+  was found by us, and neither would have been.</p>
+
+  <h3 style="margin-top:2rem">The other thing they found: our private proofs were not private</h3>
+
+  <p>Separately, the proofs that hide payment amounts were hiding them behind a mask
+  generated from a fixed number written in the source code — a number anyone reading our
+  public repository could copy. Proving the same payment twice produced <em>byte-identical</em>
+  proofs, which is a fingerprint of the payment and the opposite of what a zero-knowledge
+  proof is for. The mask now comes fresh from the operating system every time, from a
+  generator built for cryptography rather than for speed. This never put money at risk —
+  amounts were the thing exposed, not funds — but the site claimed amount confidentiality and
+  the claim was not true.</p>
+
+  <h3 style="margin-top:2rem">What survived</h3>
+
+  <p>Worth stating, because a page about two breaks reads worse than the situation is. The
+  reviewers also tried, and failed, to: create money by making the amounts not add up (eight
+  separate attempts, including the specific arithmetic trick the defence was built for);
+  reuse a proof for a different payment; forge a spend-marker; spend a coin they had already
+  paid to someone else; and swap one asset for another. Each of those died for a reason
+  someone traced and wrote down. The copied hash function at the core matches its original
+  exactly, and a setting we got wrong once is now impossible to get wrong silently. Those are
+  now checked rather than believed, which is a different thing from before.</p>
+
+  <p class="muted">The full brief we hand a reviewer is
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/AUDIT-BRIEF.md">AUDIT-BRIEF.md</a>,
+  now corrected, and carrying a new instruction: find another load-bearing assumption nobody
+  enforces, because we no longer assume this was the only one.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-27</p>
+  <h2>The phone proves its own payments</h2>
+
+  <p>A payment proof now takes about <strong>0.28 seconds</strong> on an iPhone 17 Pro Max.
+  Not in a simulator on a Mac — on the phone, in a signed app, from a plugged-in handset.</p>
+
+  <p>This closes the last open question about whether Ultraviolet can be a real wallet.
+  Making a private payment means producing a proof, and producing a proof needs the
+  payment's secrets: which coin you are spending, how much, and the key that controls it.
+  If a phone were too slow, the only way to send would be to ship those secrets to a
+  server and ask it to prove on your behalf — which hands a stranger exactly the
+  information the whole design exists to hide. A quarter of a second means nobody ever has
+  to. <strong>The secrets stay on the phone.</strong></p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>Prove</th><th>Verify</th><th>Proof</th><th>Memory</th></tr>
+    <tr><td><strong>Private payment</strong></td><td>0.28–0.31 s</td><td>1.7 ms</td><td>208 KB</td><td>279 MB</td></tr>
+    <tr><td>Non-private variant</td><td>0.10 s</td><td>1.3 ms</td><td>158 KB</td><td>56 MB</td></tr>
+  </table>
+  </div>
+
+  <p>For scale, the virtual machine this replaced needed two minutes and 9.7 GB for the
+  same payment. That is where "a phone could never prove this" came from, and it is no
+  longer true of anything in this repository.</p>
+
+  <p><strong>Two of our own memory numbers were wrong, in opposite directions.</strong>
+  Peak memory is measured per process, so proving both configurations in one run reports
+  the two of them added together — a figure that belongs to neither. Separating them moved
+  the desktop number from a meaningless 146 MB to 117 MB. In the other direction, an
+  iPhone app costs 20–25 MB just to exist before any proving starts, and counting that
+  against the prover overstates it. Both harnesses now run one configuration per process
+  and report the app's baseline separately.</p>
+
+  <p><strong>And one gap we could not explain.</strong> The private configuration wants
+  around 279 MB on the phone against 117 MB on the Mac, while the non-private one matches
+  closely, 56 MB against 67 MB. So it is something about that one configuration, not about
+  phones. The obvious suspect was parallelism, and it is not: the phone uses six threads to
+  the Mac's ten — fewer threads, more memory — and forcing both to a single thread changed
+  neither the memory nor the time. Our best guess is that the two systems differ in how
+  eagerly they hand freed memory back, and the private configuration churns through a lot
+  of large short-lived buffers. That is a guess. We are recording it as one, because 279 MB
+  is comfortably within budget either way and a wrong explanation would be worse than an
+  admitted gap.</p>
+
+  <p>The app that produces these numbers is in the repository at <code>ios/UVProbe</code>,
+  so the measurement can be repeated rather than taken on trust.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-27</p>
+  <h2>Real money on signet, and a hole in our own spec</h2>
+
+  <p>Two of these are milestones. One is a design error we had been carrying in writing
+  for weeks, and the way it surfaced is the more useful story.</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>Milestone</th><th>What it means</th></tr>
+    <tr><td><strong>Signet, on the current stack</strong></td><td>A full issuer → Bob → Carol chain settled on public Bitcoin, published by the hand-written prover: <a href="https://mempool.space/signet/tx/e284c5e7834ccf98dec811444432e2edf6e437a00f70733e4aa1a97169b03106"><code>e284c5e7…</code></a> and <a href="https://mempool.space/signet/tx/f8a81f054c834ba509b5c292544d168e2209357653454075548fdd5e82626735"><code>f8a81f05…</code></a>, 186 vB and 374 sats each. Carol checked both hops against the live chain. Balances closed at 700 + 200 + 100 = 1000. It worked on the first attempt.</td></tr>
+    <tr><td><strong>A double-spend that cost nothing</strong></td><td>Pointed at a coin it had already spent, the wallet replayed its original signed payload instead of signing a second one. No Bitcoin transaction was produced at all, and the funding wallet's balance never moved. That is the never-re-sign rule refusing to build the attack, observed on a real network.</td></tr>
+    <tr><td><strong>The spend anchor</strong></td><td>A coin now commits to <code>t = H(key)</code> rather than to the key itself, and the circuit makes a spender prove it knows the key behind <code>t</code>. One extra row, nine columns, no change in trace height — the section had spare rows.</td></tr>
+    <tr><td><strong>Encrypted wallets</strong></td><td>Wallet files are sealed with ChaCha20-Poly1305 under a passphrase. Storing them in the clear is still possible, but you have to ask for it.</td></tr>
+    <tr><td><strong>Addresses</strong></td><td>An address is a batch of one-time slots plus a scan key, handed over once. After that a payer can pay whenever it likes with the payee offline, and no payment needs an invoice.</td></tr>
+    <tr><td><strong>It builds for iOS</strong></td><td>The whole payment stack compiles for iOS and runs correctly in the simulator, with proof sizes byte-identical to the Mac build. The simulator uses the Mac's own chip, so this established the port and not the speed. The speed came later the same day, on an actual phone — see the entry above.</td></tr>
+    <tr><td><strong>Sealed payments</strong></td><td>Payments travel encrypted under hybrid ML-KEM-768 + X25519 — an attacker has to break both. The receiver finds its own mail by trying to open each envelope, because a "this one is for you" marker is exactly the metadata worth hiding. A test proves both halves matter: swap either one's ciphertext and the key breaks.</td></tr>
+  </table>
+  </div>
+
+  <p style="margin-top:1rem"><strong>The spec was wrong, and it said so out loud.</strong>
+  Our own written design said the sender should derive the coin's one-time key from a
+  shared secret. Work through it and the construction refutes itself. The sender chooses
+  that shared secret. So the sender could spend the coin it had just paid out.</p>
+
+  <p>The deeper reason is not a slip of wording. Elliptic curves let you tweak a public
+  key in the open while only the owner can tweak the matching secret, which is what
+  stealth addresses are built on. A hash-based key is a hash tree over its own secret,
+  and there is no public operation that produces one whose secret only someone else
+  knows. Getting that from hashes alone would be key agreement from a hash function,
+  which is not available. So the property had to come from somewhere other than the key
+  derivation — hence the anchor, and hence addresses that hand over a batch of slots.</p>
+
+  <p class="muted">The same change closed a privacy leak that was live until now. When a
+  coin committed to the key itself, the payer necessarily learned it — and the spend
+  marker is a fixed function of that key. Every payer kept a permanent watch on the exact
+  moment its payment was spent onward. It now holds the anchor and can compute nothing.
+  One more honest note: removing the first handover entirely would need a single
+  long-lived secret in every spend, which would make the proof's privacy property
+  load-bearing for fund safety too. Not taken, and gated on the review below.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-26</p>
+  <h2>The sovereign core, live on Bitcoin</h2>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>Milestone</th><th>What it means</th></tr>
+    <tr><td><strong>Signet, current stack</strong></td><td>A full issuer → Bob → Carol chain settled on public signet, published by the hand-written prover: <a href="https://mempool.space/signet/tx/e284c5e7834ccf98dec811444432e2edf6e437a00f70733e4aa1a97169b03106"><code>e284c5e7…</code></a> (block 314936) and <a href="https://mempool.space/signet/tx/f8a81f054c834ba509b5c292544d168e2209357653454075548fdd5e82626735"><code>f8a81f05…</code></a> (block 314938), 186 vB / 374 sats each. Carol validated <em>both</em> hops against the live chain. Balances closed at 700 + 200 + 100 = 1000.</td></tr>
+    <tr><td><strong>The zkVM deleted</strong></td><td>Twelve crates became five. The SP1 guest, prover, the SHA-256/SLH-DSA kernel, the old wallet, the patched <code>sha2</code> dependency, and the entire second CI toolchain are gone from the repository.</td></tr>
+    <tr><td><strong>A full hop in one table</strong></td><td>One 1,024-row trace now covers everything a hop needs: opening the commitments, deriving the spend marker (the nullifier), checking that amounts balance over range-checked limbs, and verifying the signature. That costs <strong>0.067 s / 158.3 KB</strong>, or <strong>0.189 s / 208.0 KB</strong> for the zero-knowledge version, which is the format payments actually use. The sponge work rides in rows the power-of-two padding was already paying for.</td></tr>
+    <tr><td><strong>The proof made sound</strong></td><td>Until this landed, the circuit proved that "some chain walk happened" and bound <em>no</em> message and <em>no</em> key. Anyone could forge it. Message and key are now pinned through 603 public values and a one-hot register the constraints hold in place.</td></tr>
+    <tr><td><strong>Formal methods, the liveness half</strong></td><td>Five machine-checked models. Supply conservation went from "no counterexample in eight steps" to <strong>proven at every depth</strong> by an inductive invariant. Three liveness failures found, one of them new.</td></tr>
+  </table>
+  </div>
+
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-26 · the measured case</p>
+  <h2>Why the virtual machine had to go</h2>
+
+  <p>These are the numbers that justified deleting a year of work. They are kept here rather than
+  on the <a href="benchmarks.html">benchmarks page</a>, which prices what a payment costs
+  <em>today</em>; this is the archaeology of a system that no longer exists. Re-running any of it
+  means checking out a commit from before the rewrite.</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>One payment hop</th><th>zkVM (SP1 v6.3.1)</th><th>Hand-written circuit</th></tr>
+    <tr><td>Prove</td><td class="no">124.0 s</td><td class="yes">0.067 s</td></tr>
+    <tr><td>Peak memory</td><td class="no">9.67 GB</td><td class="yes">67 MB</td></tr>
+    <tr><td>Proof size</td><td class="no">1,242 KB</td><td class="yes">158.3 KB</td></tr>
+  </table>
+  </div>
+
+  <p style="margin-top:1rem"><strong>Memory was the harder wall, because it could not be tuned.</strong>
+  Smaller shards made the proof <em>bigger</em> and did not reduce memory: the memory <em>is</em> the
+  execution trace, the row-by-row record of every step the program took. A three-input spend is
+  ~12M cycles and died outright on a 16 GB machine — SP1 logged <code>Memory usage is high: 80.06%</code>
+  and the process was killed. The only lever on RAM was a smaller circuit, which is the same lever
+  as speed.</p>
+
+  <p><strong>And 77% of the work was checking one signature.</strong> Of 5.18M cycles per hop, SLH-DSA
+  verification over SHA-256 was 4.0M, in-circuit recursion 1.15M, and the actual transfer logic
+  88,724 — under 2%. Recursion is the part everyone assumes is ruinous; measured by comparing a
+  chained hop against a first hop, it cost +17.3 s of 124 s. Nearly all of the signature's cost was
+  machinery for making a key <em>reusable</em>, and Ultraviolet does not need reusable spending keys:
+  a coin is spent exactly once and the protocol already enforces that. That is what pointed at WOTS+.</p>
+
+  <p><strong>The hash swap was worth less than it looks, and that was the decisive finding.</strong>
+  Called inside a proof, SHA-256 with SP1's accelerator cost 1,353 cycles against Poseidon2's 402 —
+  3.4×, not the 100× one might guess, because SHA-256 was never running unassisted. Projecting the
+  full stack of improvements: one-time signature over SHA-256 ~39 s, over Poseidon2 ~26 s, and a
+  hypothetical hop with <em>no signature at all</em> ~21 s. Those projections are a fit, not a
+  measurement. Read the last one as a floor: after switching both hash and signature you land within
+  a few seconds of the cost of doing no signature work whatsoever. Everything left was the cost of
+  the virtual machine itself, which is what made the rewrite the right move rather than more tuning.</p>
+
+  <p><strong>An awkward discovery, from reading SP1's source rather than its marketing.</strong> The
+  proofs Ultraviolet shipped on the zkVM were never zero-knowledge. Underneath, SP1 is a STARK, and
+  that raw STARK does no blinding in the machinery that commits to the trace, so the proofs carried
+  genuine fragments of the sender's private data. SP1's zero-knowledge came from a final wrapper step
+  Ultraviolet refuses on quantum-safety grounds — refusing the wrapper refused its privacy too, and
+  nobody re-checked. The chain never saw amounts or parties either way; what leaked was toward the
+  person you pay. The replacement circuit's hiding configuration genuinely is zero-knowledge, so the
+  rewrite was not a speed project with a privacy side effect. It is both.</p>
+</section>
+
+<section>
+  <p class="eyebrow">retrospective · the whole build so far</p>
+  <h2>Six things we believed that measurement disproved</h2>
+
+  <p>A page of clean numbers proves nothing about how carefully they were gathered, which is why
+  these are written down. Two of them would have sent the project down an expensive road.</p>
+
+  <div class="faq">
+
+    <details>
+      <summary>"Proving takes ~45 minutes per payment"<span>off by ~27×</span></summary>
+      <div class="answer">
+        <p>Never measured. It was an extrapolation: take a small circuit's timing and multiply by
+        the cycle increase. It sat in the spec directly beside genuinely measured numbers, with
+        nothing marking it as a guess. Proving does not scale linearly with circuit size. The real
+        figure is <strong>about two minutes</strong>. The project's own demo scripts had been
+        quietly running at that speed the whole time.</p>
+        <p class="muted">Caught by: finally running the benchmark.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>"Receiving is O(1) — one proof, any history"<span>retracted twice, in two halves</span></summary>
+      <div class="answer">
+        <p>First half: even when the recursive proof was constant-size, a recipient still had to
+        confirm that every past hand-off settled on Bitcoin. That is one chain lookup per previous
+        owner. A formal model found the gap the hard way. Skipping those checks let an attacker
+        make two honest wallets accept the same coin, doubling the money supply. So O(1) was only
+        ever true of <em>validity</em>, never of safe receiving.</p>
+        <p>Second half: the constant-size proof itself went with the zkVM. Recursion over a
+        hand-written circuit is a large piece of new consensus-critical work. So today one
+        fixed-size proof ships <em>per hop</em>, and the receive bundle grows with a coin's history.
+        The accumulator design (spec/99) is what would make receiving O(1) for real, proof and
+        lookups both. It is future work, stated as such.</p>
+        <p class="muted">Caught by: writing a machine-checked model of the protocol.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>"Verification is milliseconds"<span>given data we don't have</span></summary>
+      <div class="answer">
+        <p>True given an <em>indexed view of the chain</em>. A phone has neither the index nor the
+        ability to build one, so it has to ask a server. Asking a server reintroduces a privacy
+        leak and a trust assumption that the claim implied were absent. The same blind spot twice:
+        the cryptography got carefully priced and the data access did not.</p>
+        <p class="muted">Caught by: reading our own lookup code, which re-scanned the entire chain
+        on every single query.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>A 10 ms verification requirement, invented and then withdrawn<span>near-miss</span></summary>
+      <div class="answer">
+        <p>Four pass/fail thresholds were set before testing the hand-written circuit. Three were
+        derived from real constraints. The fourth was verification under 10 milliseconds, a round
+        number with no reasoning behind it. The circuit came in at 10.7 ms and "failed". Under the
+        stated plan, that meant abandoning the approach and switching proof systems.</p>
+        <p>Only the recipient ever verifies, once, per payment received. Ten milliseconds is
+        invisible. The gate was standing in for a different concern, which was written down
+        properly afterwards: without recursion, verification and bundle size grow with a coin's
+        history.</p>
+        <p class="muted">Caught by: being asked "wait, why is 10 ms a requirement?"</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Benchmarking the wrong hash as a "safe upper bound"<span>false negative</span></summary>
+      <div class="answer">
+        <p>The first feasibility test used Keccak instead of Poseidon2. The reasoning: Keccak is
+        more expensive per hash, so passing with it would be conservative. That is true per hash
+        and irrelevant overall. The Keccak circuit is 2,633 columns and 24 rows per hash, against
+        Poseidon2's 313 columns and one row. That is roughly <strong>120× more work</strong> for
+        the same number of hashes. It failed three thresholds, and the failure meant nothing.</p>
+        <p class="muted">Caught by: the trace dimensions being absurd on inspection.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Projecting proof size against the wrong variable<span>same test, second error</span></summary>
+      <div class="answer">
+        <p>Cost was measured against circuit <em>height</em>, then extrapolated to predict proof
+        size. But sweeping height across a 64× range moved proof size barely at all: 711 → 855 KB.
+        Proof size and verification scale with circuit <em>width</em>, so the whole projection was
+        measuring nothing. Fixed by testing width directly. Width also happens to be the parameter
+        you actually control when designing a circuit.</p>
+        <p class="muted">Caught by: the numbers being suspiciously flat.</p>
+      </div>
+    </details>
+
+  </div>
+  <p style="margin-top:1.5rem" class="muted">The pattern worth naming: every one of these survived
+  until something outside our own reasoning was pointed at it. That something was a measurement, a
+  model checker, or a blunt question. Cryptographic cost is the part that feels rigorous, so it
+  gets measured. The data access, the trace width, and the requirements get assumed. Assume nothing
+  that a benchmark, a formal model, or a "wait, why?" can check for you.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-26 · the rewrite</p>
+  <h2>Throwing away the prover</h2>
+  <p>The project spent most of its life on a general-purpose zero-knowledge virtual machine, a zkVM.
+  It let the protocol be written once in Rust and run identically on a laptop and inside a proof.
+  That is a genuinely good trade, and it is how the design got as far as it did. Then we measured
+  it: <strong>124 seconds and 9.67 GB per payment</strong>. Verifying one signature accounted for
+  77% of that, and the memory could not be tuned down. A phone could never do it.</p>
+  <p>Replacing it meant hand-writing the circuit. It also meant owning the circuit's soundness,
+  which a zkVM gives you for free. Two obstacles we had budgeted for dissolved instead. The
+  signature chains needed <strong>no lookup arguments</strong>, because a boolean selector gates
+  each step. And binding the signature to a message needed <strong>no in-circuit
+  decomposition</strong>: the verifier supplies the digits, so there is no prover-chosen value
+  anywhere. One latent bug surfaced on the way. A boundary flag was boolean but positionally free.
+  That was harmless while the proof bound nothing, and fatal the moment boundaries indexed public
+  values.</p>
+  <p class="muted">Also deleted this week: <strong>recursion</strong>. Verifying the previous proof
+  inside each new one made receiving constant-size, however long the history. Re-implementing that
+  over a hand-written circuit is a large piece of new consensus-critical work. So the design now
+  ships one small proof per hop, and the receiver checks each one. That is an honest downgrade from
+  O(1) to O(k), recorded as such rather than quietly dropped. An accumulator, not recursion, is what
+  would restore it.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-25 to 07-26 · what the models found</p>
+  <h2>Two bugs no amount of testing would have found</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Found</th><th>The defect</th></tr>
+    <tr><td><strong>Supply inflation</strong></td><td>Every wallet ran the double-spend check correctly, and one coin still became two. Checking first-occurrence <em>at your own hop</em> does not compose. An attacker routes the losing branch of a double-spend through a second wallet of their own, and that wallet simply skips the check. Nobody can see this happen, because nothing lets you verify that someone else ran a check. Both honest receivers then pass their own checks and accept. The fix: validate the coin's whole lineage — every hop in its history — not just your own. The eight-step counterexample is replayed as a test.</td></tr>
+    <tr><td><strong>The one-time key trap</strong></td><td>The new signature scheme reveals its private key if one key ever signs two different messages. The obvious guard is to remember that you signed and refuse when unsure. That guard is safe, and it <em>freezes live money</em>: a record that loses its race leaves the coin unspent on-chain and the key unusable. The only discipline that is both safe and live is to record <em>what</em> was signed and replay those exact bytes. That is now the rule. It is why the double-spend attempt on signet produced no transaction at all.</td></tr>
+  </table>
+  </div>
+  <p class="muted" style="margin-top:1rem">A model is only as honest as its choice of what the
+  adversary controls. The first model found a real bug and was blind to a second one of equal
+  severity. It missed it purely because it handed the system the very thing under test. Eight
+  modelling and tooling traps produced confident-looking wrong answers along the way. They are
+  recorded in the repository rather than quietly fixed.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-25 · direction</p>
+  <h2>Two decisions that changed the shape</h2>
+  <p><strong>The carrier became Signal.</strong> Payments travel as ordinary encrypted messages with
+  the proof as an attachment, and the messenger cannot tell money from a photo. The honest cost went
+  into the spec at the same time: Signal blocks third-party clients, so a demo needs a self-hosted
+  server. The old claim of "nothing to deploy" is dead. What survives is that <em>carrying payments
+  needs no server changes</em>. Durable storage also became a separate role, because Signal delivers
+  and then deletes.</p>
+  <p><strong>An audit found four consensus-critical gaps.</strong> Spend authorization lived outside
+  the proof. The spend marker was not bound to ownership. An asset id was not bound to its issuer.
+  And duplicate inputs could inflate the supply. All four are addressed in the current design. A
+  formal model then found a fifth that was worse than any of them.</p>
+</section>
+
+<section>
+  <p class="eyebrow">2026-07-22 to 07-25 · the first stack</p>
+  <h2>Everything that had to exist first</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Date</th><th>Milestone</th></tr>
+    <tr><td>07-22</td><td><strong>First proven transfer.</strong> A real post-quantum signature, a real proof, 88,724 cycles.</td></tr>
+    <tr><td>07-22</td><td><strong>Recursion working.</strong> Hop two verified hop one's proof inside its own circuit: one 1,242 KB proof for any history depth. Later deleted with the zkVM.</td></tr>
+    <tr><td>07-23</td><td><strong>The spec became a book.</strong> Numbered files, each with one job, each referencing only lower numbers.</td></tr>
+    <tr><td>07-24</td><td><strong>Payments end to end, locally</strong>, then <strong>against a real Bitcoin node</strong> on regtest — records as actual OP_RETURN transactions, double-spend prevention enforced by Bitcoin's own ordering.</td></tr>
+    <tr><td>07-24</td><td><strong>Channels designed.</strong> Latest-state-wins channels without adaptor signatures. The entire post-quantum-channels research problem turns out to be a workaround for a scripting limitation this design does not have. Still designed and formally modelled, <em>not built</em>.</td></tr>
+    <tr><td>07-25</td><td><strong>First payment on public Bitcoin</strong> (previous architecture): 300 units, one 64-byte record, 374 sats of fee.</td></tr>
+    <tr><td>07-25</td><td><strong>Signature verification moved inside the proof.</strong> Cost: 44.5× more cycles, ~124 s per payment. That measurement is what condemned the zkVM.</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <div class="callout">
+    <h3>What is not done</h3>
+    <p><strong>Nobody outside this project has reviewed the proof circuits.</strong> That is the
+    single largest risk, and it grew when the zkVM was deleted. A general-purpose prover's soundness
+    is one artifact that many people review. A hand-written circuit's soundness is every column
+    being constrained. A test suite built from honest inputs cannot find a column nobody
+    constrained.</p>
+    <p>Also open: the Signal client, channels, and spending several coins at once.
+    The <a href="https://github.com/ultravienet/ultraviolet/blob/main/SPEC.md">open
+    problems list</a> is authoritative — if it is not there, it is not open.</p>
+  </div>
+</section>
+
+<footer>
+  ULTRAVIOLET · JOURNAL · July 2026 · <a href="index.html">main page</a> ·
+  <a href="benchmarks.html">benchmarks</a> ·
+  <a href="https://github.com/ultravienet/ultraviolet/blob/main/SPEC.md">open problems</a> ·
+  <a href="https://github.com/ultravienet/ultraviolet">source</a>
+</footer>
+
+</main>
+</body>
+</html>

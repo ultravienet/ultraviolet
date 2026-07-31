@@ -1,0 +1,112 @@
+# Generated into an .xcodeproj by `xcodegen` (see ios/build-wallet.sh).
+#
+# The project file is generated rather than committed: a pbxproj is a merge
+# hazard and an opaque diff, and everything that actually matters here — the
+# sources, the linked static library, the deployment target — is this file.
+name: UVWallet
+options:
+  bundleIdPrefix: net.ultravie
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+targets:
+  UVWallet:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.ultravie.uvwallet
+        # Version 0.1: this is research, and the number should not imply
+        # otherwise. Build numbers are consumed permanently by App Store
+        # Connect — a build cannot be deleted and its number reused — so this
+        # is bumped deliberately, never automatically.
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Ultraviolet
+        # The icon: the visible spectrum running out past violet into the dark,
+        # which is what the name means. Built by ios/make-icon.sh, not by hand,
+        # so it can be regenerated rather than being a binary nobody can edit.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # iPhone only, portrait only. Not a limitation being hidden: a wallet is
+        # a one-handed thing, and claiming iPad support would mean claiming the
+        # multitasking orientations Apple then requires and nobody has tested.
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        # Export compliance (Apple: "App Uses Non-Exempt Encryption").
+        #
+        # TRUE, and the reason is two dependencies rather than a judgement call:
+        # the app bundles its own **ChaCha20-Poly1305** and a hybrid
+        # **ML-KEM-768 + X25519** key exchange (`envelope/`) to seal payment
+        # bundles. That is data confidentiality, implemented in code we ship
+        # rather than called from Apple's frameworks, so none of the exempt
+        # categories (authentication only, digital signatures, copy protection,
+        # or "uses only the OS's crypto") apply.
+        #
+        # Everything else in the binary is hashing and proving — Poseidon2,
+        # FRI/STARK, SHA-256 — which is not encryption for confidentiality and
+        # does not on its own move this declaration. Argon2 is there too, but
+        # only to key the local wallet seal, which is again confidentiality.
+        #
+        # Declaring FALSE would be a false statement about a shipped app, which
+        # is why this is not the convenient answer. What remains is a *legal*
+        # question this file cannot settle: whether the mass-market provisions
+        # (EAR 740.17(b)(1)) cover it, which needs an annual self-classification
+        # report to BIS rather than a plist key.
+        # **The key is deliberately ABSENT, and absent is not `false`.**
+        #
+        # Omitting it means "ask me in App Store Connect", and the questions get
+        # answered there, truthfully, in Apple's own UI. Setting it `false` would
+        # be a claim that this app does not use non-exempt encryption, which is
+        # a **false statement about a shipped binary** — see the evidence below.
+        # If you are here to tidy up, do not add `false`.
+        #
+        # Why it is not simply `YES`: `YES` requires a matching
+        # `ITSEncryptionExportComplianceCode`, and that code only exists once an
+        # encryption declaration has been created in App Store Connect. Verified
+        # by API on 2026-07-30 that this app has none, so `YES` alone fails
+        # validation with error 90592 — whose wording ("doesn't match the key
+        # value of the app's export compliance documentation") implies a
+        # declaration exists even when none does. `[]` in that message means the
+        # key is absent, not wrong.
+        #
+        # When a declaration does exist, set both keys and builds stop being
+        # asked. Until then this is the honest configuration, not the convenient
+        # one: it defers the question rather than answering it wrongly.
+        #
+        # INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: YES
+        # The code Apple issues once export-compliance documentation is on file.
+        #
+        # **Required whenever the key above is YES**, discovered on 2026-07-30:
+        # `altool --validate-app` refuses a build that declares non-exempt
+        # encryption without a matching code —
+        #
+        #   Invalid Export Compliance Code. The export compliance key value []
+        #   in the app's Info.plist doesn't match the key value of the app's
+        #   export compliance documentation. (90592)
+        #
+        # `[]` is the empty value it found — the key is ABSENT, not wrong. Note
+        # the message says "the app's export compliance documentation" even when
+        # none exists; verified by API on 2026-07-30 that this app has no
+        # encryption declaration at all. The code only exists once a declaration
+        # is created in App Store Connect. Until then the working path is to omit
+        # the YES key and answer the questions in App Store Connect's UI — see
+        # ios/README.md "Export compliance".
+        #
+        # INFOPLIST_KEY_ITSEncryptionExportComplianceCode: <uuid-from-app-store-connect>
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        # The Rust static library, built by ios/build-wallet.sh for whichever
+        # destination is being built (device or simulator).
+        LIBRARY_SEARCH_PATHS:
+          - "$(inherited)"
+          - "$(PROJECT_DIR)/lib/$(PLATFORM_NAME)"
+        OTHER_LDFLAGS:
+          - "$(inherited)"
+          - "-luv_iosffi"
